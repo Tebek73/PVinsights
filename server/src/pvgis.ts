@@ -1,9 +1,7 @@
-//CLIENT PVGIS, cu cache hibrid (memorie + sqlite) si retry
-// deoarece poate raspunde 429/529 iar multe cereri se repeta, scop protectie + performanta
-import axios from 'axios'; // pentru cereri http
-import Bottleneck from 'bottleneck'; // pentru rate limiting si retry
-import {LRUCache} from 'lru-cache'; // pentru cache in memorie
- import { getApiCache , upsertApiCache } from './db/sqlite';
+// PVGIS API client: in-memory cache + rate limit + retry (429/529/5xx)
+import axios from 'axios';
+import Bottleneck from 'bottleneck';
+import { LRUCache } from 'lru-cache';
 
 type PVGISTool = 'PVcalc' // simulare productie pe luna/an
                 | `seriescalc` // radiatie si productie PV orara -> grafice si analize detaliate
@@ -50,30 +48,20 @@ function buildQuery(params: QueryParams){
     return q.toString();
 }
 
-// fetch cu 1) cache memorie, 2) cache sqlite, 3) retry la 429/529/5xx
+// fetch: memory cache first, then API with retry on 429/529/5xx
 async function fetchWithRetry(url: string): Promise<any> {
-
-    const hitMem = memCache.get(url);
-    if(hitMem) {
-        console.log(`PVGIS cache memorie HIT: ${url}`);
-        return hitMem;
-    }
-
-    const hitDb = getApiCache(url);
-    if(hitDb) {
-        console.log(`PVGIS cache DB HIT: ${url}`);
-        memCache.set(url, hitDb); //populam si cache in memorie
-        return hitDb;
+    const cached = memCache.get(url);
+    if (cached) {
+        return cached;
     }
 
     let attempt = 0;
-    while(true){
-        try{
-            const res = await limiter.schedule(() => 
+    while (true) {
+        try {
+            const res = await limiter.schedule(() =>
                 axios.get(url, { timeout: DEFAULT_TIMEOUT_MS })
             );
             memCache.set(url, res.data);
-            upsertApiCache(url, res.data);
             return res.data;
 
         } catch (error: any) {

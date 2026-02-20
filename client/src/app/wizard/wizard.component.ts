@@ -2,15 +2,51 @@ import { Component, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SimulateService, type SimulateRequest } from '../simulate.service';
 import { SimulationStoreService } from '../simulation-store.service';
+import { TranslatePipe } from '../translate.pipe';
+
+function formatSimulationError(err: unknown): string {
+  if (!err || typeof err !== 'object') return 'Simulation failed. Please try again.';
+  const res = err as HttpErrorResponse;
+  const body = res.error;
+  if (body?.error) {
+    if (typeof body.error === 'string') return body.error;
+    return 'Invalid input: ' + formatZodLike(body.error);
+  }
+  if (res.status === 0)
+    return 'Network error. Is the backend running? Start the server on port 3000 and ensure the proxy is used.';
+  if (res.status === 400)
+    return body?.error ? (typeof body.error === 'string' ? body.error : 'Invalid input: ' + formatZodLike(body.error)) : 'Invalid input. Check your values.';
+  if (res.status === 502) return (body?.error as string) || 'Service temporarily unavailable. Try again in a moment.';
+  return `Request failed (${res.status ?? 'unknown'}). Please try again.`;
+}
+
+function formatZodLike(obj: unknown, prefix = ''): string {
+  if (obj === null || typeof obj !== 'object') return String(obj);
+  const o = obj as Record<string, unknown>;
+  const errs = o['_errors'];
+  if (Array.isArray(errs) && errs.length) {
+    const path = prefix ? prefix + ': ' : '';
+    return path + errs.join(', ');
+  }
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(o)) {
+    if (k === '_errors') continue;
+    const nextPrefix = prefix ? `${prefix}.${k}` : k;
+    const sub = formatZodLike(v, nextPrefix);
+    if (sub) parts.push(sub);
+  }
+  return parts.join('; ');
+}
 
 type WizardStep = 1 | 2 | 3;
 
 @Component({
   standalone: true,
   selector: 'app-wizard',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, TranslatePipe],
   templateUrl: './wizard.component.html',
   styleUrl: './wizard.component.scss'
 })
@@ -78,6 +114,10 @@ export class WizardComponent {
     }
   }
 
+  closeError(): void {
+    this.store.errorMessage.set(null);
+  }
+
   submit(): void {
     const body: SimulateRequest = {
       location: {
@@ -118,11 +158,9 @@ export class WizardComponent {
         this.store.isLoading.set(false);
         this.router.navigate(['/results']);
       },
-      error: () => {
+      error: (err: unknown) => {
         this.store.isLoading.set(false);
-        this.store.errorMessage.set(
-          'Simulation failed. Please try again in a moment.'
-        );
+        this.store.errorMessage.set(formatSimulationError(err));
       }
     });
   }

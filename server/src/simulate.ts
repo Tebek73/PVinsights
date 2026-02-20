@@ -44,7 +44,7 @@ export type SimulationResult = {
     monthly_energy_kwh: { month: number; kwh: number }[];
     cashflow_cumulative: { year: number; value: number }[];
   };
-  insights: { type: 'info' | 'warning'; text: string }[];
+  insights: { type: 'info' | 'warning'; text: string; key?: string }[];
 };
 
 export async function runSimulation(input: SimulateInput): Promise<SimulationResult> {
@@ -275,28 +275,32 @@ function buildInsights(
   if (pv.loss_percent > 20) {
     insights.push({
       type: 'warning',
-      text: 'High system losses; check inverter sizing, cabling, and shading.'
+      text: 'High system losses; check inverter sizing, cabling, and shading.',
+      key: 'insight.highLosses'
     });
   }
 
   if (!pv.optimalangles && pv.aspect_deg != null && Math.abs(pv.aspect_deg) > 90) {
     insights.push({
       type: 'warning',
-      text: 'Array orientation is far from south; expect reduced energy yield.'
+      text: 'Array orientation is far from south; expect reduced energy yield.',
+      key: 'insight.orientationFarFromSouth'
     });
   }
 
   if (totals.E_y > 0 && totals.SD_y / totals.E_y > 0.05) {
     insights.push({
       type: 'info',
-      text: 'Year-to-year variability of solar resource is relatively high.'
+      text: 'Year-to-year variability of solar resource is relatively high.',
+      key: 'insight.highVariability'
     });
   }
 
   if (kpis.specific_yield_kwh_per_kwp > 1200) {
     insights.push({
       type: 'info',
-      text: 'Great solar resource for PV at this location (high specific yield).'
+      text: 'Great solar resource for PV at this location (high specific yield).',
+      key: 'insight.greatSolarResource'
     });
   }
 

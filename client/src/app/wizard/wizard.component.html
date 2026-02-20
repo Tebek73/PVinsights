@@ -1,32 +1,29 @@
 <div class="wizard">
   <header class="wizard-header">
-    <h2>Solar PV feasibility wizard</h2>
-    <p>Follow the 3 steps to run a PVGIS-based simulation.</p>
+    <h2>{{ 'wizard.title' | translate }}</h2>
+    <p>{{ 'wizard.subtitle' | translate }}</p>
 
     <ol class="wizard-steps">
-      <li [class.active]="step() === 1">1. Location</li>
-      <li [class.active]="step() === 2">2. PV system</li>
-      <li [class.active]="step() === 3">3. Economics</li>
+      <li [class.active]="step() === 1">{{ 'wizard.step1' | translate }}</li>
+      <li [class.active]="step() === 2">{{ 'wizard.step2' | translate }}</li>
+      <li [class.active]="step() === 3">{{ 'wizard.step3' | translate }}</li>
     </ol>
   </header>
 
   <section class="wizard-body">
     <!-- Step 1: Location -->
     <ng-container *ngIf="step() === 1">
-      <h3>1. Location</h3>
-      <p class="wizard-body-text">
-        For now, enter latitude and longitude manually. Later you can connect these fields to
-        a map pin.
-      </p>
+      <h3>{{ 'wizard.step1' | translate }}</h3>
+      <p class="wizard-body-text">{{ 'wizard.location.hint' | translate }}</p>
 
       <div class="wizard-grid">
         <label>
-          Latitude (°)
+          {{ 'wizard.latitude' | translate }}
           <input type="number" [ngModel]="lat()" (ngModelChange)="lat.set($event)" />
         </label>
 
         <label>
-          Longitude (°)
+          {{ 'wizard.longitude' | translate }}
           <input type="number" [ngModel]="lon()" (ngModelChange)="lon.set($event)" />
         </label>
       </div>
@@ -34,14 +31,12 @@
 
     <!-- Step 2: PV system -->
     <ng-container *ngIf="step() === 2">
-      <h3>2. PV system</h3>
-      <p class="wizard-body-text">
-        Define the PV system size and basic configuration. Advanced options are optional.
-      </p>
+      <h3>{{ 'wizard.step2' | translate }}</h3>
+      <p class="wizard-body-text">{{ 'wizard.pv.hint' | translate }}</p>
 
       <div class="wizard-grid">
         <label>
-          System size (kWp)
+          {{ 'wizard.systemSize' | translate }}
           <input
             type="number"
             min="0"
@@ -52,7 +47,7 @@
         </label>
 
         <label>
-          System losses (%)
+          {{ 'wizard.systemLosses' | translate }}
           <input
             type="number"
             min="0"
@@ -71,7 +66,7 @@
             [ngModel]="usehorizon()"
             (ngModelChange)="usehorizon.set($event)"
           />
-          Include terrain horizon shading
+          {{ 'wizard.useHorizon' | translate }}
         </label>
 
         <label class="checkbox">
@@ -80,16 +75,16 @@
             [ngModel]="optimalangles()"
             (ngModelChange)="optimalangles.set($event)"
           />
-          Optimize tilt and azimuth automatically
+          {{ 'wizard.optimalAngles' | translate }}
         </label>
       </div>
 
       <details class="wizard-advanced">
-        <summary>Advanced PV settings</summary>
+        <summary>{{ 'wizard.advancedPv' | translate }}</summary>
 
         <div class="wizard-grid wizard-grid-3">
           <label>
-            Tilt angle (°)
+            {{ 'wizard.tiltAngle' | translate }}
             <input
               type="number"
               min="0"
@@ -101,7 +96,7 @@
           </label>
 
           <label>
-            Azimuth (0=S, 90=W, -90=E)
+            {{ 'wizard.azimuth' | translate }}
             <input
               type="number"
               min="-180"
@@ -113,37 +108,37 @@
           </label>
 
           <label>
-            PV technology
+            {{ 'wizard.pvTech' | translate }}
             <select
               [ngModel]="pvtechchoice()"
               (ngModelChange)="pvtechchoice.set($event)"
             >
-              <option value="crystSi">crystSi (default)</option>
-              <option value="crystSi2025">crystSi2025</option>
-              <option value="CIS">CIS</option>
-              <option value="CdTe">CdTe</option>
-              <option value="Unknown">Unknown</option>
+              <option value="crystSi">{{ 'pvTech.crystSi' | translate }}</option>
+              <option value="crystSi2025">{{ 'pvTech.crystSi2025' | translate }}</option>
+              <option value="CIS">{{ 'pvTech.CIS' | translate }}</option>
+              <option value="CdTe">{{ 'pvTech.CdTe' | translate }}</option>
+              <option value="Unknown">{{ 'pvTech.Unknown' | translate }}</option>
             </select>
           </label>
         </div>
 
         <div class="wizard-grid">
           <label>
-            Mounting
+            {{ 'wizard.mounting' | translate }}
             <select
               [ngModel]="mountingplace()"
               (ngModelChange)="mountingplace.set($event)"
             >
-              <option value="free">Free-standing</option>
-              <option value="building">Building</option>
+              <option value="free">{{ 'wizard.mountingFree' | translate }}</option>
+              <option value="building">{{ 'wizard.mountingBuilding' | translate }}</option>
             </select>
           </label>
 
           <label>
-            Radiation database (optional)
+            {{ 'wizard.radDatabase' | translate }}
             <input
               type="text"
-              placeholder="leave empty for default"
+              [placeholder]="'wizard.radPlaceholder' | translate"
               [ngModel]="raddatabase()"
               (ngModelChange)="raddatabase.set($event || null)"
             />
@@ -154,15 +149,12 @@
 
     <!-- Step 3: Economics -->
     <ng-container *ngIf="step() === 3">
-      <h3>3. Economics</h3>
-      <p class="wizard-body-text">
-        Provide basic economic assumptions. The backend will compute savings, payback, and
-        cashflow.
-      </p>
+      <h3>{{ 'wizard.step3' | translate }}</h3>
+      <p class="wizard-body-text">{{ 'wizard.economics.hint' | translate }}</p>
 
       <div class="wizard-grid">
         <label>
-          System cost (CAPEX)
+          {{ 'wizard.capex' | translate }}
           <input
             type="number"
             min="0"
@@ -173,7 +165,7 @@
         </label>
 
         <label>
-          Electricity price (buy)
+          {{ 'wizard.priceBuy' | translate }}
           <input
             type="number"
             min="0"
@@ -186,7 +178,7 @@
 
       <div class="wizard-grid">
         <label>
-          Self-consumption (%)
+          {{ 'wizard.selfConsumption' | translate }}
           <input
             type="number"
             min="0"
@@ -198,7 +190,7 @@
         </label>
 
         <label>
-          Export price (optional)
+          {{ 'wizard.priceSell' | translate }}
           <input
             type="number"
             min="0"
@@ -210,11 +202,11 @@
       </div>
 
       <details class="wizard-advanced">
-        <summary>Advanced economics</summary>
+        <summary>{{ 'wizard.advancedEconomics' | translate }}</summary>
 
         <div class="wizard-grid wizard-grid-3">
           <label>
-            OPEX yearly
+            {{ 'wizard.opex' | translate }}
             <input
               type="number"
               min="0"
@@ -225,7 +217,7 @@
           </label>
 
           <label>
-            Degradation (%/year)
+            {{ 'wizard.degradation' | translate }}
             <input
               type="number"
               min="0"
@@ -237,7 +229,7 @@
           </label>
 
           <label>
-            Analysis years
+            {{ 'wizard.analysisYears' | translate }}
             <input
               type="number"
               min="1"
@@ -251,7 +243,7 @@
 
         <div class="wizard-grid">
           <label>
-            Discount rate (%/year)
+            {{ 'wizard.discountRate' | translate }}
             <input
               type="number"
               min="0"
@@ -263,7 +255,7 @@
           </label>
 
           <label>
-            Price escalation (%/year)
+            {{ 'wizard.priceEscalation' | translate }}
             <input
               type="number"
               min="0"
@@ -286,7 +278,7 @@
         [disabled]="step() === 1 || store.isLoading()"
         (click)="prevStep()"
       >
-        Back
+        {{ 'wizard.back' | translate }}
       </button>
 
       <button
@@ -296,7 +288,7 @@
         [disabled]="!canGoNext() || store.isLoading()"
         (click)="nextStep()"
       >
-        Next
+        {{ 'wizard.next' | translate }}
       </button>
 
       <button
@@ -306,14 +298,23 @@
         [disabled]="store.isLoading()"
         (click)="submit()"
       >
-        <span *ngIf="!store.isLoading()">Run simulation</span>
-        <span *ngIf="store.isLoading()">Running...</span>
+        <span *ngIf="!store.isLoading()">{{ 'wizard.runSimulation' | translate }}</span>
+        <span *ngIf="store.isLoading()">{{ 'wizard.running' | translate }}</span>
       </button>
     </div>
-
-    <p class="wizard-error" *ngIf="store.errorMessage() as error">
-      {{ error }}
-    </p>
   </footer>
+
+  <!-- Error pop-up -->
+  @if (store.errorMessage()) {
+    <div class="wizard-error-overlay" (click)="closeError()" role="dialog" aria-modal="true" aria-labelledby="error-dialog-title">
+      <div class="wizard-error-dialog" (click)="$event.stopPropagation()">
+        <h3 id="error-dialog-title" class="wizard-error-dialog-title">{{ 'wizard.errorTitle' | translate }}</h3>
+        <p class="wizard-error-dialog-message">{{ store.errorMessage() }}</p>
+        <button type="button" class="wizard-error-dialog-close" (click)="closeError()">
+          {{ 'wizard.close' | translate }}
+        </button>
+      </div>
+    </div>
+  }
 </div>
 

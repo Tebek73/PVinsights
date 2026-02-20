@@ -3,13 +3,29 @@
     <div class="app-header-left">
       <div class="app-logo-mark">PV</div>
       <div class="app-header-text">
-        <h1 class="app-title">Solar PV Feasibility</h1>
-        <p class="app-subtitle">Estimate solar production, savings, and payback for your location.</p>
+        <h1 class="app-title">{{ 'app.title' | translate }}</h1>
+        <p class="app-subtitle">{{ 'app.subtitle' | translate }}</p>
       </div>
     </div>
     <nav class="app-nav">
-      <span class="app-nav-pill">MVP</span>
-      <span class="app-nav-pill app-nav-pill-secondary">PVGIS PVcalc</span>
+      <button
+        type="button"
+        class="app-lang-btn"
+        [class.active]="lang.currentLang() === 'en'"
+        (click)="setLang('en')"
+      >
+        {{ 'lang.en' | translate }}
+      </button>
+      <button
+        type="button"
+        class="app-lang-btn"
+        [class.active]="lang.currentLang() === 'ro'"
+        (click)="setLang('ro')"
+      >
+        {{ 'lang.ro' | translate }}
+      </button>
+      <span class="app-nav-pill">{{ 'app.mvp' | translate }}</span>
+      <span class="app-nav-pill app-nav-pill-secondary">{{ 'app.pvgis' | translate }}</span>
     </nav>
   </header>
 

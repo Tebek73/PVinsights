@@ -68,6 +68,28 @@
   gap: 0.5rem;
 }
 
+.app-lang-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.8);
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.app-lang-btn:hover {
+  color: #e5e7eb;
+  border-color: rgba(148, 163, 184, 0.7);
+}
+
+.app-lang-btn.active {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #86efac;
+}
+
 .app-nav-pill {
   padding: 0.25rem 0.7rem;
   border-radius: 999px;

@@ -2,11 +2,21 @@ import { Component, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SimulationStoreService } from '../simulation-store.service';
+import { TranslatePipe } from '../translate.pipe';
+import { LanguageService } from '../language.service';
+
+/** Fallback: map backend English text to translation key when API doesn't send key */
+const INSIGHT_TEXT_TO_KEY: Record<string, string> = {
+  'High system losses; check inverter sizing, cabling, and shading.': 'insight.highLosses',
+  'Array orientation is far from south; expect reduced energy yield.': 'insight.orientationFarFromSouth',
+  'Year-to-year variability of solar resource is relatively high.': 'insight.highVariability',
+  'Great solar resource for PV at this location (high specific yield).': 'insight.greatSolarResource'
+};
 
 @Component({
   standalone: true,
   selector: 'app-results',
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './results.component.html',
   styleUrl: './results.component.scss'
 })
@@ -21,7 +31,8 @@ export class ResultsComponent {
 
   constructor(
     public readonly store: SimulationStoreService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly lang: LanguageService
   ) {
     effect(() => {
       const res = this.store.lastResponse();
@@ -55,6 +66,13 @@ export class ResultsComponent {
 
   backToWizard(): void {
     this.router.navigate(['/']);
+  }
+
+  /** Returns translated insight text (uses key from API or fallback map from English text). */
+  getInsightText(insight: { type: string; text: string; key?: string }): string {
+    const key = insight.key ?? INSIGHT_TEXT_TO_KEY[insight.text];
+    if (key) return this.lang.translate(key);
+    return insight.text;
   }
 }
 

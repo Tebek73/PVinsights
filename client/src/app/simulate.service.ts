@@ -64,7 +64,7 @@ export interface SimulateResponse {
     monthly_energy_kwh: { month: number; kwh: number }[];
     cashflow_cumulative: { year: number; value: number }[];
   };
-  insights: { type: 'info' | 'warning'; text: string }[];
+  insights: { type: 'info' | 'warning'; text: string; key?: string }[];
 }
 
 @Injectable({ providedIn: 'root' })

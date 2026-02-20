@@ -1,47 +1,47 @@
 <div class="results">
   <header class="results-header">
-    <h2>Simulation results</h2>
-    <p>Review PV yield, key KPIs, cashflow, and insights for your scenario.</p>
+    <h2>{{ 'results.title' | translate }}</h2>
+    <p>{{ 'results.subtitle' | translate }}</p>
   </header>
 
   <ng-container *ngIf="store.lastResponse() as res; else emptyState">
     <section class="results-kpis">
       <div class="kpi-card">
-        <h3>Annual energy</h3>
-        <p class="kpi-value">{{ res.kpis.annual_kwh | number: '1.0-0' }} kWh/year</p>
+        <h3>{{ 'results.annualEnergy' | translate }}</h3>
+        <p class="kpi-value">{{ res.kpis.annual_kwh | number: '1.0-0' }} {{ 'results.unitKwhYear' | translate }}</p>
       </div>
 
       <div class="kpi-card">
-        <h3>Specific yield</h3>
+        <h3>{{ 'results.specificYield' | translate }}</h3>
         <p class="kpi-value">
-          {{ res.kpis.specific_yield_kwh_per_kwp | number: '1.0-0' }} kWh/kWp·year
+          {{ res.kpis.specific_yield_kwh_per_kwp | number: '1.0-0' }} {{ 'results.unitKwhKwpYear' | translate }}
         </p>
       </div>
 
       <div class="kpi-card">
-        <h3>Capacity factor</h3>
+        <h3>{{ 'results.capacityFactor' | translate }}</h3>
         <p class="kpi-value">{{ res.kpis.capacity_factor_pct | number: '1.1-1' }} %</p>
       </div>
 
       <div class="kpi-card">
-        <h3>Payback</h3>
+        <h3>{{ 'results.payback' | translate }}</h3>
         <p class="kpi-value">
           <ng-container *ngIf="res.finance.payback_years !== null; else noPayback">
-            {{ res.finance.payback_years }} years
+            {{ res.finance.payback_years }} {{ 'results.years' | translate }}
           </ng-container>
           <ng-template #noPayback>n/a</ng-template>
         </p>
       </div>
 
       <div class="kpi-card">
-        <h3>Year 1 savings</h3>
+        <h3>{{ 'results.year1Savings' | translate }}</h3>
         <p class="kpi-value">
           {{ res.finance.savings_year1 | number: '1.0-0' }}
         </p>
       </div>
 
       <div class="kpi-card">
-        <h3>ROI (simple)</h3>
+        <h3>{{ 'results.roi' | translate }}</h3>
         <p class="kpi-value">
           <ng-container *ngIf="res.finance.roi !== null; else noRoi">
             {{ (res.finance.roi * 100) | number: '1.0-0' }} %
@@ -53,7 +53,7 @@
 
     <section class="results-charts">
       <div class="chart-card">
-        <h3>Monthly PV production</h3>
+        <h3>{{ 'results.monthlyProduction' | translate }}</h3>
         <div class="chart-bars" *ngIf="monthlyEnergy().length > 0">
           <div
             class="chart-bar-row"
@@ -74,7 +74,7 @@
       </div>
 
       <div class="chart-card">
-        <h3>Cumulative cashflow</h3>
+        <h3>{{ 'results.cumulativeCashflow' | translate }}</h3>
         <div class="chart-bars" *ngIf="cashflow().length > 0">
           <div
             class="chart-bar-row"
@@ -99,23 +99,29 @@
     </section>
 
     <section class="results-insights" *ngIf="res.insights.length > 0">
-      <h3>Insights</h3>
+      <h3>{{ 'results.insights' | translate }}</h3>
       <ul>
         <li
           *ngFor="let insight of res.insights"
           [class.warning]="insight.type === 'warning'"
         >
-          {{ insight.text }}
+          {{ getInsightText(insight) }}
         </li>
       </ul>
     </section>
+
+    <footer class="results-footer">
+      <button type="button" class="results-button" (click)="backToWizard()">
+        {{ 'results.runNew' | translate }}
+      </button>
+    </footer>
   </ng-container>
 
   <ng-template #emptyState>
     <section class="results-empty">
-      <p>No simulation data yet. Start from the wizard to run your first scenario.</p>
+      <p>{{ 'results.empty' | translate }}</p>
       <button type="button" class="results-button" (click)="backToWizard()">
-        Back to wizard
+        {{ 'results.backToWizard' | translate }}
       </button>
     </section>
   </ng-template>

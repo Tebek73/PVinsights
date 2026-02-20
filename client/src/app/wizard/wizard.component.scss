@@ -162,6 +162,60 @@ select:disabled {
   color: #fecaca;
 }
 
+.wizard-error-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.wizard-error-dialog {
+  background: #1e293b;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.wizard-error-dialog-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fecaca;
+}
+
+.wizard-error-dialog-message {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #e5e7eb;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wizard-error-dialog-close {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: #f87171;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.wizard-error-dialog-close:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .wizard-grid,
   .wizard-grid-3 {

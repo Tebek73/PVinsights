@@ -1,50 +1,43 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SimulateSchema = exports.AnalyzeSchema = void 0;
+exports.SimulateSchema = void 0;
 // Zod schemas for backend API contracts
 const zod_1 = require("zod");
-// Legacy /api/pv/analyze schema (direct PVGIS proxy with flat fields)
-exports.AnalyzeSchema = zod_1.z.object({
-    lat: zod_1.z.number().min(-90).max(90),
-    lon: zod_1.z.number().min(-180).max(180),
-    // Sistem PV
-    peakpower_kwp: zod_1.z.number().positive().max(1000),
-    loss_pct: zod_1.z.number().min(0).max(80).default(14),
-    // Geometrie (ori tilt+azimuth, ori optimalangles)
-    tilt_deg: zod_1.z.number().min(0).max(90).optional(),
-    azimuth_from_north_deg: zod_1.z.number().min(0).max(360).optional(),
-    optimalangles: zod_1.z.boolean().default(false),
-    // Baza de radiatie + orizont
-    usehorizon: zod_1.z.boolean().default(true),
-    radiation_database: zod_1.z
-        .enum(['PVGIS-SARAH3', 'PVGIS-ERA5', 'PVGIS-NSRDB', 'PVGIS-CMSAF'])
-        .optional(),
-    // Serii orare
-    pv_timeseries: zod_1.z.boolean().default(true),
-    components: zod_1.z.boolean().default(true),
-    startyear: zod_1.z.number().int().min(2005).max(2020).optional(),
-    endyear: zod_1.z.number().int().min(2005).max(2020).optional(),
-    // Alte optiuni si seturi de date
-    want_tmy: zod_1.z.boolean().default(true),
-    want_monthly: zod_1.z.boolean().default(true),
-    want_yearly: zod_1.z.boolean().default(false),
-    want_daily: zod_1.z.boolean().default(false),
-    want_horizon: zod_1.z.boolean().default(false)
-});
-// New /api/simulate schema matching PROJECT.md (nested location + pv + economics)
 exports.SimulateSchema = zod_1.z.object({
     location: zod_1.z.object({
-        lat: zod_1.z.number().min(-90).max(90),
-        lon: zod_1.z.number().min(-180).max(180)
+        lat: zod_1.z
+            .number()
+            .min(-90, { message: 'Latitude must be at least -90 (south)' })
+            .max(90, { message: 'Latitude must be at most 90 (north)' }),
+        lon: zod_1.z
+            .number()
+            .min(-180, { message: 'Longitude must be at least -180 (west)' })
+            .max(180, { message: 'Longitude must be at most 180 (east)' })
     }),
     pv: zod_1.z.object({
-        peakpower_kw: zod_1.z.number().positive().max(1000),
-        loss_percent: zod_1.z.number().min(0).max(80).default(14),
+        peakpower_kw: zod_1.z
+            .number()
+            .positive({ message: 'System size must be greater than 0' })
+            .max(1000, { message: 'System size must be at most 1000 kWp' }),
+        loss_percent: zod_1.z
+            .number()
+            .min(0, { message: 'System losses must be at least 0%' })
+            .max(80, { message: 'System losses must be at most 80%' })
+            .default(14),
         usehorizon: zod_1.z.boolean().default(true),
         optimalangles: zod_1.z.boolean().default(true),
-        angle_deg: zod_1.z.number().min(0).max(90).nullable().optional(),
-        // PVGIS convention: 0=S, 90=W, -90=E
-        aspect_deg: zod_1.z.number().min(-180).max(180).nullable().optional(),
+        angle_deg: zod_1.z
+            .number()
+            .min(0, { message: 'Tilt angle must be between 0 and 90°' })
+            .max(90, { message: 'Tilt angle must be between 0 and 90°' })
+            .nullable()
+            .optional(),
+        aspect_deg: zod_1.z
+            .number()
+            .min(-180, { message: 'Azimuth must be between -180 and 180 (0=South, 90=West, -90=East)' })
+            .max(180, { message: 'Azimuth must be between -180 and 180' })
+            .nullable()
+            .optional(),
         pvtechchoice: zod_1.z
             .enum(['crystSi', 'crystSi2025', 'CIS', 'CdTe', 'Unknown'])
             .default('crystSi'),
@@ -52,14 +45,39 @@ exports.SimulateSchema = zod_1.z.object({
         raddatabase: zod_1.z.string().nullable().optional()
     }),
     economics: zod_1.z.object({
-        capex: zod_1.z.number().positive(),
-        price_buy: zod_1.z.number().positive(),
-        self_consumption: zod_1.z.number().min(0).max(1).default(0.5),
-        price_sell: zod_1.z.number().min(0).default(0),
-        opex_yearly: zod_1.z.number().min(0).default(0),
-        degradation: zod_1.z.number().min(0).max(0.1).default(0.005),
-        analysis_years: zod_1.z.number().int().min(1).max(40).default(25),
-        discount_rate: zod_1.z.number().min(0).max(1).default(0.06),
-        price_escalation: zod_1.z.number().min(0).max(1).default(0)
+        capex: zod_1.z
+            .number()
+            .positive({ message: 'System cost must be greater than 0' }),
+        price_buy: zod_1.z
+            .number()
+            .positive({ message: 'Electricity price must be greater than 0' }),
+        self_consumption: zod_1.z
+            .number()
+            .min(0, { message: 'Self-consumption must be between 0 and 100%' })
+            .max(1, { message: 'Self-consumption must be between 0 and 100%' })
+            .default(0.5),
+        price_sell: zod_1.z.number().min(0, { message: 'Export price cannot be negative' }).default(0),
+        opex_yearly: zod_1.z.number().min(0, { message: 'Yearly OPEX cannot be negative' }).default(0),
+        degradation: zod_1.z
+            .number()
+            .min(0, { message: 'Degradation rate must be between 0 and 10% per year' })
+            .max(0.1, { message: 'Degradation rate must be between 0 and 10% per year' })
+            .default(0.005),
+        analysis_years: zod_1.z
+            .number()
+            .int({ message: 'Analysis period must be a whole number of years' })
+            .min(1, { message: 'Analysis period must be at least 1 year' })
+            .max(40, { message: 'Analysis period must be at most 40 years' })
+            .default(25),
+        discount_rate: zod_1.z
+            .number()
+            .min(0, { message: 'Discount rate must be between 0 and 100%' })
+            .max(1, { message: 'Discount rate must be between 0 and 100%' })
+            .default(0.06),
+        price_escalation: zod_1.z
+            .number()
+            .min(0, { message: 'Price escalation cannot be negative' })
+            .max(1, { message: 'Price escalation must be at most 100% per year' })
+            .default(0)
     })
 });

@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { TranslatePipe } from './translate.pipe';
+import { LanguageService, type Lang } from './language.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('client');
+  constructor(public readonly lang: LanguageService) {}
+
+  setLang(l: Lang): void {
+    this.lang.setLanguage(l);
+  }
 }

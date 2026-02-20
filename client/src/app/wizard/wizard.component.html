@@ -1,0 +1,319 @@
+<div class="wizard">
+  <header class="wizard-header">
+    <h2>Solar PV feasibility wizard</h2>
+    <p>Follow the 3 steps to run a PVGIS-based simulation.</p>
+
+    <ol class="wizard-steps">
+      <li [class.active]="step() === 1">1. Location</li>
+      <li [class.active]="step() === 2">2. PV system</li>
+      <li [class.active]="step() === 3">3. Economics</li>
+    </ol>
+  </header>
+
+  <section class="wizard-body">
+    <!-- Step 1: Location -->
+    <ng-container *ngIf="step() === 1">
+      <h3>1. Location</h3>
+      <p class="wizard-body-text">
+        For now, enter latitude and longitude manually. Later you can connect these fields to
+        a map pin.
+      </p>
+
+      <div class="wizard-grid">
+        <label>
+          Latitude (°)
+          <input type="number" [ngModel]="lat()" (ngModelChange)="lat.set($event)" />
+        </label>
+
+        <label>
+          Longitude (°)
+          <input type="number" [ngModel]="lon()" (ngModelChange)="lon.set($event)" />
+        </label>
+      </div>
+    </ng-container>
+
+    <!-- Step 2: PV system -->
+    <ng-container *ngIf="step() === 2">
+      <h3>2. PV system</h3>
+      <p class="wizard-body-text">
+        Define the PV system size and basic configuration. Advanced options are optional.
+      </p>
+
+      <div class="wizard-grid">
+        <label>
+          System size (kWp)
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            [ngModel]="peakpower_kw()"
+            (ngModelChange)="peakpower_kw.set($event)"
+          />
+        </label>
+
+        <label>
+          System losses (%)
+          <input
+            type="number"
+            min="0"
+            max="80"
+            step="1"
+            [ngModel]="loss_percent()"
+            (ngModelChange)="loss_percent.set($event)"
+          />
+        </label>
+      </div>
+
+      <div class="wizard-grid">
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            [ngModel]="usehorizon()"
+            (ngModelChange)="usehorizon.set($event)"
+          />
+          Include terrain horizon shading
+        </label>
+
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            [ngModel]="optimalangles()"
+            (ngModelChange)="optimalangles.set($event)"
+          />
+          Optimize tilt and azimuth automatically
+        </label>
+      </div>
+
+      <details class="wizard-advanced">
+        <summary>Advanced PV settings</summary>
+
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            Tilt angle (°)
+            <input
+              type="number"
+              min="0"
+              max="90"
+              [disabled]="optimalangles()"
+              [ngModel]="angle_deg()"
+              (ngModelChange)="angle_deg.set($event)"
+            />
+          </label>
+
+          <label>
+            Azimuth (0=S, 90=W, -90=E)
+            <input
+              type="number"
+              min="-180"
+              max="180"
+              [disabled]="optimalangles()"
+              [ngModel]="aspect_deg()"
+              (ngModelChange)="aspect_deg.set($event)"
+            />
+          </label>
+
+          <label>
+            PV technology
+            <select
+              [ngModel]="pvtechchoice()"
+              (ngModelChange)="pvtechchoice.set($event)"
+            >
+              <option value="crystSi">crystSi (default)</option>
+              <option value="crystSi2025">crystSi2025</option>
+              <option value="CIS">CIS</option>
+              <option value="CdTe">CdTe</option>
+              <option value="Unknown">Unknown</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="wizard-grid">
+          <label>
+            Mounting
+            <select
+              [ngModel]="mountingplace()"
+              (ngModelChange)="mountingplace.set($event)"
+            >
+              <option value="free">Free-standing</option>
+              <option value="building">Building</option>
+            </select>
+          </label>
+
+          <label>
+            Radiation database (optional)
+            <input
+              type="text"
+              placeholder="leave empty for default"
+              [ngModel]="raddatabase()"
+              (ngModelChange)="raddatabase.set($event || null)"
+            />
+          </label>
+        </div>
+      </details>
+    </ng-container>
+
+    <!-- Step 3: Economics -->
+    <ng-container *ngIf="step() === 3">
+      <h3>3. Economics</h3>
+      <p class="wizard-body-text">
+        Provide basic economic assumptions. The backend will compute savings, payback, and
+        cashflow.
+      </p>
+
+      <div class="wizard-grid">
+        <label>
+          System cost (CAPEX)
+          <input
+            type="number"
+            min="0"
+            step="100"
+            [ngModel]="capex()"
+            (ngModelChange)="capex.set($event)"
+          />
+        </label>
+
+        <label>
+          Electricity price (buy)
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [ngModel]="price_buy()"
+            (ngModelChange)="price_buy.set($event)"
+          />
+        </label>
+      </div>
+
+      <div class="wizard-grid">
+        <label>
+          Self-consumption (%)
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="5"
+            [ngModel]="self_consumption() * 100"
+            (ngModelChange)="self_consumption.set(($event ?? 0) / 100)"
+          />
+        </label>
+
+        <label>
+          Export price (optional)
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [ngModel]="price_sell()"
+            (ngModelChange)="price_sell.set($event)"
+          />
+        </label>
+      </div>
+
+      <details class="wizard-advanced">
+        <summary>Advanced economics</summary>
+
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            OPEX yearly
+            <input
+              type="number"
+              min="0"
+              step="50"
+              [ngModel]="opex_yearly()"
+              (ngModelChange)="opex_yearly.set($event)"
+            />
+          </label>
+
+          <label>
+            Degradation (%/year)
+            <input
+              type="number"
+              min="0"
+              max="5"
+              step="0.1"
+              [ngModel]="degradation() * 100"
+              (ngModelChange)="degradation.set(($event ?? 0) / 100)"
+            />
+          </label>
+
+          <label>
+            Analysis years
+            <input
+              type="number"
+              min="1"
+              max="40"
+              step="1"
+              [ngModel]="analysis_years()"
+              (ngModelChange)="analysis_years.set($event)"
+            />
+          </label>
+        </div>
+
+        <div class="wizard-grid">
+          <label>
+            Discount rate (%/year)
+            <input
+              type="number"
+              min="0"
+              max="20"
+              step="0.5"
+              [ngModel]="discount_rate() * 100"
+              (ngModelChange)="discount_rate.set(($event ?? 0) / 100)"
+            />
+          </label>
+
+          <label>
+            Price escalation (%/year)
+            <input
+              type="number"
+              min="0"
+              max="10"
+              step="0.5"
+              [ngModel]="price_escalation() * 100"
+              (ngModelChange)="price_escalation.set(($event ?? 0) / 100)"
+            />
+          </label>
+        </div>
+      </details>
+    </ng-container>
+  </section>
+
+  <footer class="wizard-footer">
+    <div class="wizard-footer-left">
+      <button
+        type="button"
+        class="wizard-nav-button"
+        [disabled]="step() === 1 || store.isLoading()"
+        (click)="prevStep()"
+      >
+        Back
+      </button>
+
+      <button
+        type="button"
+        class="wizard-nav-button"
+        *ngIf="step() < 3"
+        [disabled]="!canGoNext() || store.isLoading()"
+        (click)="nextStep()"
+      >
+        Next
+      </button>
+
+      <button
+        type="button"
+        class="wizard-submit-button"
+        *ngIf="step() === 3"
+        [disabled]="store.isLoading()"
+        (click)="submit()"
+      >
+        <span *ngIf="!store.isLoading()">Run simulation</span>
+        <span *ngIf="store.isLoading()">Running...</span>
+      </button>
+    </div>
+
+    <p class="wizard-error" *ngIf="store.errorMessage() as error">
+      {{ error }}
+    </p>
+  </footer>
+</div>
+

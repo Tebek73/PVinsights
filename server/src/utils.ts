@@ -11,3 +11,7 @@ export function num(x: unknown): number {
     const n = Number(x);
     return Number.isFinite(n) ? n : 0;
 }
+
+export function getMonthlyArray(pvcalc: any){
+    return pvcalc?.outputs?.monthly?.fixed ?? pvcalc?.outputs?.monthly ?? [];
+}

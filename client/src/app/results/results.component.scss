@@ -1,0 +1,173 @@
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.results-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.results-header p {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.results-empty {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: #e5e7eb;
+}
+
+.results-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.results-button:hover {
+  background: rgba(15, 23, 42, 1);
+}
+
+.results-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.kpi-card {
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+.kpi-card h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.kpi-value {
+  margin: 0.3rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.results-charts {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.chart-card {
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.85);
+}
+
+.chart-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+
+.chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.chart-bar-label {
+  width: 2.3rem;
+  color: #9ca3af;
+}
+
+.chart-bar-track {
+  position: relative;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(31, 41, 55, 0.9);
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.chart-bar-track-cashflow {
+  background: rgba(31, 41, 55, 0.9);
+}
+
+.chart-bar-fill-cashflow {
+  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+}
+
+.chart-bar-fill-cashflow.negative {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+}
+
+.chart-bar-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.results-insights {
+  margin-top: 1.25rem;
+}
+
+.results-insights h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+
+.results-insights ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.results-insights li.warning {
+  color: #fed7aa;
+}
+
+@media (max-width: 900px) {
+  .results-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .results-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+

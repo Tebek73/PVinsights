@@ -21,9 +21,14 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'wizard.step2': { en: '2. PV system', ro: '2. Sistem PV' },
   'wizard.step3': { en: '3. Economics', ro: '3. Economie' },
   'wizard.location.hint': {
-    en: 'For now, enter latitude and longitude manually. Later you can connect these fields to a map pin.',
-    ro: 'Introdu latitudinea și longitudinea manual. Mai târziu le poți conecta la un pin pe hartă.'
+    en: 'Search for an address or place the pin on the map. The map and pin stay in sync.',
+    ro: 'Caută o adresă sau plasează pinul pe hartă. Harta și pinul rămân sincronizate.'
   },
+  'location.searchPlaceholder': { en: 'Search address or place...', ro: 'Caută adresă sau loc...' },
+  'location.searching': { en: 'Searching...', ro: 'Se caută...' },
+  'location.noResults': { en: 'No results. Try another search or place the pin on the map.', ro: 'Niciun rezultat. Încearcă altă căutare sau plasează pinul pe hartă.' },
+  'location.orPlacePin': { en: 'Or click/drag the pin on the map', ro: 'Sau dă click / trage pinul pe hartă' },
+  'location.selected': { en: 'Selected', ro: 'Selectat' },
   'wizard.latitude': { en: 'Latitude (°)', ro: 'Latitudine (°)' },
   'wizard.longitude': { en: 'Longitude (°)', ro: 'Longitudine (°)' },
   'wizard.pv.hint': {

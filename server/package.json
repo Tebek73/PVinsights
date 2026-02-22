@@ -23,6 +23,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "md-to-pdf": "^5.2.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",

@@ -11,21 +11,35 @@
   </header>
 
   <section class="wizard-body">
-    <!-- Step 1: Location -->
+    <!-- Step 1: Area type then location -->
     <ng-container *ngIf="step() === 1">
       <h3>{{ 'wizard.step1' | translate }}</h3>
-      <p class="wizard-body-text">{{ 'wizard.location.hint' | translate }}</p>
 
-      <div class="wizard-grid">
+      <p class="wizard-body-text">{{ 'wizard.areaTypeQuestion' | translate }}</p>
+      <div class="wizard-area-type">
         <label>
-          {{ 'wizard.latitude' | translate }}
-          <input type="number" [ngModel]="lat()" (ngModelChange)="lat.set($event)" />
+          <select
+            [ngModel]="area_type()"
+            (ngModelChange)="area_type.set($event || null)"
+          >
+            <option value="">{{ 'wizard.areaTypePlaceholder' | translate }}</option>
+            <option value="rural">{{ 'wizard.areaTypeRural' | translate }}</option>
+            <option value="suburban">{{ 'wizard.areaTypeSuburban' | translate }}</option>
+            <option value="urban">{{ 'wizard.areaTypeUrban' | translate }}</option>
+          </select>
         </label>
+      </div>
 
-        <label>
-          {{ 'wizard.longitude' | translate }}
-          <input type="number" [ngModel]="lon()" (ngModelChange)="lon.set($event)" />
-        </label>
+      <div
+        class="wizard-location-block"
+        [class.wizard-location-visible]="area_type() !== null"
+      >
+        <p class="wizard-body-text">{{ 'wizard.location.hint' | translate }}</p>
+        <app-location-picker
+          [lat]="lat()"
+          [lon]="lon()"
+          (latLonChange)="onLatLonChange($event)"
+        />
       </div>
     </ng-container>
 

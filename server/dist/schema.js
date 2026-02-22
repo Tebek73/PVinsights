@@ -12,7 +12,8 @@ exports.SimulateSchema = zod_1.z.object({
         lon: zod_1.z
             .number()
             .min(-180, { message: 'Longitude must be at least -180 (west)' })
-            .max(180, { message: 'Longitude must be at most 180 (east)' })
+            .max(180, { message: 'Longitude must be at most 180 (east)' }),
+        area_type: zod_1.z.enum(['rural', 'suburban', 'urban']).optional().nullable()
     }),
     pv: zod_1.z.object({
         peakpower_kw: zod_1.z

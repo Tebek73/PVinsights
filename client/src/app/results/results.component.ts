@@ -12,6 +12,7 @@ const INSIGHT_TEXT_TO_KEY: Record<string, string> = {
   'Year-to-year variability of solar resource is relatively high.': 'insight.highVariability',
   'Great solar resource for PV at this location (high specific yield).': 'insight.greatSolarResource'
 };
+// Backend may send "Yield adjusted for urban/suburban shading (buildings/trees)." with key insight.areaTypeShading
 
 @Component({
   standalone: true,

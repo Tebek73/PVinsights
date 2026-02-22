@@ -50,6 +50,24 @@
   color: #9ca3af;
 }
 
+.wizard-area-type {
+  margin-top: 0.5rem;
+  max-width: 28rem;
+}
+
+.wizard-location-block {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease-out, opacity 0.3s ease-out;
+}
+
+.wizard-location-block.wizard-location-visible {
+  max-height: 600px;
+  opacity: 1;
+  margin-top: 1rem;
+}
+
 .wizard-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

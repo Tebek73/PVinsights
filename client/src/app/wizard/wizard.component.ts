@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SimulateService, type SimulateRequest } from '../simulate.service';
 import { SimulationStoreService } from '../simulation-store.service';
 import { TranslatePipe } from '../translate.pipe';
+import { LocationPickerComponent } from '../location-picker/location-picker.component';
 
 function formatSimulationError(err: unknown): string {
   if (!err || typeof err !== 'object') return 'Simulation failed. Please try again.';
@@ -46,14 +47,15 @@ type WizardStep = 1 | 2 | 3;
 @Component({
   standalone: true,
   selector: 'app-wizard',
-  imports: [FormsModule, CommonModule, TranslatePipe],
+  imports: [FormsModule, CommonModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './wizard.component.html',
   styleUrl: './wizard.component.scss'
 })
 export class WizardComponent {
   readonly step = signal<WizardStep>(1);
 
-  // Step 1: location
+  // Step 1: area type then location
+  area_type = signal<'rural' | 'suburban' | 'urban' | null>(null);
   lat = signal<number>(44.43);
   lon = signal<number>(26.1);
 
@@ -82,7 +84,7 @@ export class WizardComponent {
   readonly canGoNext = computed(() => {
     const s = this.step();
     if (s === 1) {
-      return Number.isFinite(this.lat()) && Number.isFinite(this.lon());
+      return this.area_type() !== null && Number.isFinite(this.lat()) && Number.isFinite(this.lon());
     }
     if (s === 2) {
       return this.peakpower_kw() > 0 && this.loss_percent() >= 0;
@@ -118,11 +120,17 @@ export class WizardComponent {
     this.store.errorMessage.set(null);
   }
 
+  onLatLonChange(e: { lat: number; lon: number }): void {
+    this.lat.set(e.lat);
+    this.lon.set(e.lon);
+  }
+
   submit(): void {
     const body: SimulateRequest = {
       location: {
         lat: this.lat(),
-        lon: this.lon()
+        lon: this.lon(),
+        area_type: this.area_type() ?? undefined
       },
       pv: {
         peakpower_kw: this.peakpower_kw(),

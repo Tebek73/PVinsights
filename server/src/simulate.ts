@@ -1,6 +1,12 @@
-import { callPVGIS } from './pvgis';
+import { callPVGIS, getHorizonProfile } from './pvgis';
 import { getMonthlyArray, num } from './utils';
 import type { SimulateInput } from './schema';
+
+const AREA_TYPE_FACTOR: Record<'rural' | 'suburban' | 'urban', number> = {
+  rural: 1.0,
+  suburban: 0.92,
+  urban: 0.85
+};
 
 type MonthlyPoint = {
   month: number;
@@ -45,6 +51,7 @@ export type SimulationResult = {
     cashflow_cumulative: { year: number; value: number }[];
   };
   insights: { type: 'info' | 'warning'; text: string; key?: string }[];
+  meta?: { area_type_applied: 'rural' | 'suburban' | 'urban' | null };
 };
 
 export async function runSimulation(input: SimulateInput): Promise<SimulationResult> {
@@ -66,18 +73,46 @@ export async function runSimulation(input: SimulateInput): Promise<SimulationRes
     pvParams.aspect = pv.aspect_deg;
   }
 
+  if (pv.usehorizon) {
+    try {
+      const horizon = await getHorizonProfile(location.lat, location.lon);
+      pvParams.userhorizon = horizon.join(',');
+      pvParams.usehorizon = 1;
+    } catch {
+      // keep usehorizon=1, PVGIS will use internal DEM
+    }
+  }
+
   const radiationDatabase =
     pv.raddatabase && pv.raddatabase.trim().length > 0 ? pv.raddatabase : undefined;
 
   const pvcalc = await callPVGIS('PVcalc', pvParams, radiationDatabase);
 
-  const monthly = parseMonthly(pvcalc);
-  const totals = parseTotals(pvcalc);
+  let monthly = parseMonthly(pvcalc);
+  let totals = parseTotals(pvcalc);
+
+  const areaType = location.area_type && AREA_TYPE_FACTOR[location.area_type] !== undefined
+    ? location.area_type
+    : null;
+  const shadingFactor = areaType ? AREA_TYPE_FACTOR[areaType] : 1;
+
+  if (shadingFactor !== 1) {
+    totals = {
+      ...totals,
+      E_y: totals.E_y * shadingFactor,
+      SD_y: totals.SD_y * shadingFactor
+    };
+    monthly = monthly.map((m) => ({
+      ...m,
+      E_m: m.E_m * shadingFactor,
+      SD_m: m.SD_m * shadingFactor
+    }));
+  }
 
   const kpis = computeKpis(totals, monthly, pv.peakpower_kw);
   const finance = computeFinance(totals, economics);
   const charts = buildCharts(monthly, economics.capex, finance.cashflow_cumulative);
-  const insights = buildInsights(pv, totals, kpis);
+  const insights = buildInsights(pv, totals, kpis, areaType);
 
   return {
     pvgis: {
@@ -88,7 +123,8 @@ export async function runSimulation(input: SimulateInput): Promise<SimulationRes
     kpis,
     finance,
     charts,
-    insights
+    insights,
+    meta: { area_type_applied: areaType }
   };
 }
 
@@ -268,9 +304,18 @@ function buildCharts(
 function buildInsights(
   pv: SimulateInput['pv'],
   totals: Totals,
-  kpis: SimulationResult['kpis']
+  kpis: SimulationResult['kpis'],
+  areaType: 'rural' | 'suburban' | 'urban' | null
 ): SimulationResult['insights'] {
   const insights: SimulationResult['insights'] = [];
+
+  if (areaType === 'urban' || areaType === 'suburban') {
+    insights.push({
+      type: 'info',
+      text: `Yield adjusted for ${areaType} shading (buildings/trees).`,
+      key: 'insight.areaTypeShading'
+    });
+  }
 
   if (pv.loss_percent > 20) {
     insights.push({

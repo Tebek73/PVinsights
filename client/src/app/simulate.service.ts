@@ -6,6 +6,7 @@ export interface SimulateRequest {
   location: {
     lat: number;
     lon: number;
+    area_type?: 'rural' | 'suburban' | 'urban' | null;
   };
   pv: {
     peakpower_kw: number;
@@ -65,6 +66,7 @@ export interface SimulateResponse {
     cashflow_cumulative: { year: number; value: number }[];
   };
   insights: { type: 'info' | 'warning'; text: string; key?: string }[];
+  meta?: { area_type_applied: 'rural' | 'suburban' | 'urban' | null };
 }
 
 @Injectable({ providedIn: 'root' })

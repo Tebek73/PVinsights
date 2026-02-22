@@ -10,7 +10,8 @@ export const SimulateSchema = z.object({
     lon: z
       .number()
       .min(-180, { message: 'Longitude must be at least -180 (west)' })
-      .max(180, { message: 'Longitude must be at most 180 (east)' })
+      .max(180, { message: 'Longitude must be at most 180 (east)' }),
+    area_type: z.enum(['rural', 'suburban', 'urban']).optional().nullable()
   }),
   pv: z.object({
     peakpower_kw: z

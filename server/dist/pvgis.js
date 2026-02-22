@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.callPVGIS = callPVGIS;
 exports.buildPVGISUrl = buildPVGISUrl;
+exports.getHorizonProfile = getHorizonProfile;
 // PVGIS API client: in-memory cache + rate limit + retry (429/529/5xx)
 const axios_1 = __importDefault(require("axios"));
 const bottleneck_1 = __importDefault(require("bottleneck"));
@@ -88,4 +89,35 @@ async function callPVGIS(tool, params, radiation_database) {
 function buildPVGISUrl(tool, params, radiation_database) {
     const finalParams = { ...params, raddatabase: radiation_database };
     return `${baseUrl(tool, radiation_database)}?${buildQuery(finalParams)}`;
+}
+/** Horizon profile: 48 heights in degrees, North then clockwise (for PVcalc userhorizon). */
+const HORIZON_COUNT = 48;
+/**
+ * Get DEM-calculated horizon profile for a point (terrain shading).
+ * Returns 48 elevation angles in degrees, starting at North and moving clockwise.
+ * On parse error or missing data returns all zeros so caller can still run PVcalc without horizon.
+ */
+async function getHorizonProfile(lat, lon) {
+    try {
+        const data = await callPVGIS('printhorizon', { lat, lon });
+        const profile = data?.outputs?.horizon_profile;
+        if (!Array.isArray(profile) || profile.length === 0) {
+            return Array(HORIZON_COUNT).fill(0);
+        }
+        const heights = profile.map((p) => {
+            const h = p?.H_hor;
+            return typeof h === 'number' && Number.isFinite(h) ? h : 0;
+        });
+        if (heights.length >= HORIZON_COUNT) {
+            return heights.slice(0, HORIZON_COUNT);
+        }
+        const out = [...heights];
+        while (out.length < HORIZON_COUNT)
+            out.push(0);
+        return out;
+    }
+    catch (err) {
+        console.warn('getHorizonProfile failed, using flat horizon:', err);
+        return Array(HORIZON_COUNT).fill(0);
+    }
 }

@@ -20,6 +20,23 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'wizard.step1': { en: '1. Location', ro: '1. Locație' },
   'wizard.step2': { en: '2. PV system', ro: '2. Sistem PV' },
   'wizard.step3': { en: '3. Economics', ro: '3. Economie' },
+  'wizard.areaTypeQuestion': {
+    en: 'What best describes the installation site?',
+    ro: 'Cum descrii cel mai bine locul de instalare?'
+  },
+  'wizard.areaTypeRural': {
+    en: 'Rural (open land, few buildings/trees)',
+    ro: 'Rural (teren deschis, puține clădiri/copaci)'
+  },
+  'wizard.areaTypeSuburban': {
+    en: 'Suburban (houses, some trees)',
+    ro: 'Suburban (case, câțiva copaci)'
+  },
+  'wizard.areaTypeUrban': {
+    en: 'Urban (buildings, more shading)',
+    ro: 'Urban (clădiri, mai multă umbrire)'
+  },
+  'wizard.areaTypePlaceholder': { en: 'Select...', ro: 'Alege...' },
   'wizard.location.hint': {
     en: 'Search for an address or place the pin on the map. The map and pin stay in sync.',
     ro: 'Caută o adresă sau plasează pinul pe hartă. Harta și pinul rămân sincronizate.'
@@ -115,6 +132,10 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'insight.greatSolarResource': {
     en: 'Great solar resource for PV at this location (high specific yield).',
     ro: 'Resursă solară foarte bună pentru PV la această locație (randament specific ridicat).'
+  },
+  'insight.areaTypeShading': {
+    en: 'Yield adjusted for urban/suburban shading (buildings/trees).',
+    ro: 'Randament ajustat pentru umbrirea urbană/suburbană (clădiri/copaci).'
   }
 };
 

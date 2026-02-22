@@ -1,0 +1,53 @@
+<div class="location-picker">
+  <div class="location-search">
+    <label class="location-search-label">
+      <input
+        type="text"
+        class="location-search-input"
+        [placeholder]="'location.searchPlaceholder' | translate"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event); onSearchInput()"
+      />
+    </label>
+    @if (searchLoading()) {
+      <span class="location-search-status">{{ 'location.searching' | translate }}</span>
+    }
+  </div>
+
+  @if (searchResults().length > 0) {
+    <ul class="location-results">
+      @for (r of searchResults(); track r.place_id) {
+        <li>
+          <button type="button" class="location-result-btn" (click)="selectResult(r)">
+            {{ r.display_name }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+  @if (searchQuery().trim().length >= 2 && !searchLoading() && searchResults().length === 0) {
+    <p class="location-no-results">{{ 'location.noResults' | translate }}</p>
+  }
+
+  <p class="location-or">{{ 'location.orPlacePin' | translate }}</p>
+
+  <div class="location-map-wrap">
+    <div id="location-picker-map" class="location-map"></div>
+  </div>
+
+  @if (selectedAddress() || reverseLoading()) {
+    <p class="location-selected">
+      <span class="location-selected-label">{{ 'location.selected' | translate }}:</span>
+      @if (reverseLoading()) {
+        <span class="location-selected-loading">{{ 'location.searching' | translate }}</span>
+      } @else if (selectedAddress()) {
+        <span class="location-selected-address">{{ selectedAddress() }}</span>
+      }
+    </p>
+  }
+  @if (!selectedAddress() && !reverseLoading() && lat() !== undefined && lon() !== undefined) {
+    <p class="location-coords">
+      {{ lat() | number:'1.4-4' }}, {{ lon() | number:'1.4-4' }}
+    </p>
+  }
+</div>

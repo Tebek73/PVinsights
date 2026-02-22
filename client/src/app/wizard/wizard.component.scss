@@ -113,6 +113,17 @@ select:disabled {
   width: auto;
 }
 
+.wizard-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: normal;
+}
+
+.wizard-hint-npv {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
 .wizard-advanced {
   margin-top: 1rem;
   padding-top: 0.75rem;

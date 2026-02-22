@@ -80,5 +80,20 @@ exports.SimulateSchema = zod_1.z.object({
             .min(0, { message: 'Price escalation cannot be negative' })
             .max(1, { message: 'Price escalation must be at most 100% per year' })
             .default(0)
+    }),
+    cost_model: zod_1.z
+        .object({
+        fixed_cost: zod_1.z.number().min(0),
+        cost_per_kwp: zod_1.z.number().min(0)
     })
+        .optional(),
+    consumption: zod_1.z
+        .object({
+        annual_kwh: zod_1.z.number().min(0),
+        daytime_fraction: zod_1.z.number().min(0).max(1)
+    })
+        .optional(),
+    kwp_range: zod_1.z
+        .tuple([zod_1.z.number().positive(), zod_1.z.number().positive(), zod_1.z.number().positive()])
+        .optional()
 });

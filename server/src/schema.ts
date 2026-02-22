@@ -78,7 +78,22 @@ export const SimulateSchema = z.object({
       .min(0, { message: 'Price escalation cannot be negative' })
       .max(1, { message: 'Price escalation must be at most 100% per year' })
       .default(0)
-  })
+  }),
+  cost_model: z
+    .object({
+      fixed_cost: z.number().min(0),
+      cost_per_kwp: z.number().min(0)
+    })
+    .optional(),
+  consumption: z
+    .object({
+      annual_kwh: z.number().min(0),
+      daytime_fraction: z.number().min(0).max(1)
+    })
+    .optional(),
+  kwp_range: z
+    .tuple([z.number().positive(), z.number().positive(), z.number().positive()])
+    .optional()
 });
 
 export type SimulateInput = z.infer<typeof SimulateSchema>;

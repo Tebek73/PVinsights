@@ -1,0 +1,5 @@
+{"sessionId":"b09851","location":"simulate.ts:runSimulation","message":"runSimulation start","data":{"lat":44.43,"lon":26.1,"peakpower_kw":3},"timestamp":1771780979062,"hypothesisId":"H1"}
+{"sessionId":"b09851","location":"simulate.ts:afterPVGIS","message":"PVGIS parsed","data":{"hasOutputs":true,"monthlyLen":12,"E_y":3893.71},"timestamp":1771780979890,"hypothesisId":"H2"}
+{"sessionId":"b09851","location":"results.component.ts:effect","message":"MC display check","data":{"paybackEdgesLen":21,"paybackCountsLen":20,"npvEdgesLen":21,"npvCountsLen":20,"pbEdgesOk":true,"nvEdgesOk":true,"totalPb":2000,"totalNpv":2000,"payback_p50":11,"npv_p50":3292.44199779464},"timestamp":1771780979910,"hypothesisId":"H-D1"}
+{"sessionId":"b09851","location":"simulate.ts:runSimulation","message":"runSimulation start","data":{"lat":44.43,"lon":26.1,"peakpower_kw":3},"timestamp":1771781786264,"hypothesisId":"H1"}
+{"sessionId":"b09851","location":"simulate.ts:afterPVGIS","message":"PVGIS parsed","data":{"hasOutputs":true,"monthlyLen":12,"E_y":3893.71},"timestamp":1771781786266,"hypothesisId":"H2"}

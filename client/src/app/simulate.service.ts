@@ -30,6 +30,9 @@ export interface SimulateRequest {
     discount_rate: number;
     price_escalation: number;
   };
+  cost_model?: { fixed_cost: number; cost_per_kwp: number };
+  consumption?: { annual_kwh: number; daytime_fraction: number };
+  kwp_range?: [number, number, number];
 }
 
 export interface SimulateResponse {
@@ -67,6 +70,41 @@ export interface SimulateResponse {
   };
   insights: { type: 'info' | 'warning'; text: string; key?: string }[];
   meta?: { area_type_applied: 'rural' | 'suburban' | 'urban' | null };
+  scenarios?: {
+    by_self_consumption: { self_consumption: number; payback_years: number | null; npv: number | null; savings_year1: number }[];
+    by_price_buy: { price_buy: number; payback_years: number | null; npv: number | null; savings_year1: number }[];
+  };
+  sensitivity?: {
+    one_d: { variable: 'price_buy'; values: number[]; payback_years: (number | null)[]; npv: (number | null)[] };
+    two_d: {
+      variable_x: 'price_buy';
+      variable_y: 'self_consumption';
+      x_axis: number[];
+      y_axis: number[];
+      payback_grid: (number | null)[][];
+      npv_grid: (number | null)[][];
+    };
+  };
+  monte_carlo?: {
+    n_trials: number;
+    target_payback_years?: number;
+    payback: { p10: number; p50: number; p90: number; prob_under_target?: number };
+    npv: { p10: number; p50: number; p90: number };
+    histogram_bins?: {
+      payback: { edges: number[]; counts: number[] };
+      npv: { edges: number[]; counts: number[] };
+    };
+  };
+  break_even?: {
+    target_payback_years?: number;
+    break_even_capex: number | null;
+    break_even_price_buy: number | null;
+  };
+  kwp_optimization?: {
+    recommended_kwp_npv: number;
+    recommended_kwp_payback: number;
+    curve: { kwp: number; npv: number; payback_years: number | null }[];
+  };
 }
 
 @Injectable({ providedIn: 'root' })

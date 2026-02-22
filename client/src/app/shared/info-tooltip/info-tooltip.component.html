@@ -1,0 +1,25 @@
+<span class="info-tooltip-wrap">
+  <button
+    type="button"
+    class="info-tooltip-trigger"
+    [attr.aria-label]="'aria.infoExplanation' | translate"
+    [attr.aria-expanded]="visible()"
+    [attr.aria-describedby]="visible() ? tooltipId : null"
+    (click)="toggle()"
+    (mouseenter)="open()"
+    (mouseleave)="close()"
+  >
+    <span aria-hidden="true">i</span>
+  </button>
+  @if (visible()) {
+    <div
+      class="info-tooltip-panel"
+      [id]="tooltipId"
+      role="tooltip"
+      (mouseenter)="open()"
+      (mouseleave)="close()"
+    >
+      {{ explanationKey() | translate }}
+    </div>
+  }
+</span>

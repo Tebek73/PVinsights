@@ -2,29 +2,32 @@
   <header class="results-header">
     <h2>{{ 'results.title' | translate }}</h2>
     <p>{{ 'results.subtitle' | translate }}</p>
+    <p class="results-intro-overall">{{ 'results.introOverall' | translate }}</p>
   </header>
 
   <ng-container *ngIf="store.lastResponse() as res; else emptyState">
     <section class="results-kpis">
+      <p class="results-block-intro">{{ 'results.introFromSun' | translate }}</p>
       <div class="kpi-card">
-        <h3>{{ 'results.annualEnergy' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.annualEnergyPlain' | translate }}<app-info-tooltip explanationKey="results.explainAnnualEnergy" /></h3>
         <p class="kpi-value">{{ res.kpis.annual_kwh | number: '1.0-0' }} {{ 'results.unitKwhYear' | translate }}</p>
       </div>
 
       <div class="kpi-card">
-        <h3>{{ 'results.specificYield' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.specificYieldPlain' | translate }}<app-info-tooltip explanationKey="results.explainSpecificYield" /></h3>
         <p class="kpi-value">
           {{ res.kpis.specific_yield_kwh_per_kwp | number: '1.0-0' }} {{ 'results.unitKwhKwpYear' | translate }}
         </p>
       </div>
 
       <div class="kpi-card">
-        <h3>{{ 'results.capacityFactor' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.capacityFactorPlain' | translate }}<app-info-tooltip explanationKey="results.explainCapacityFactor" /></h3>
         <p class="kpi-value">{{ res.kpis.capacity_factor_pct | number: '1.1-1' }} %</p>
       </div>
 
+      <p class="results-block-intro results-block-intro-money">{{ 'results.introYourMoney' | translate }}</p>
       <div class="kpi-card">
-        <h3>{{ 'results.payback' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.paybackPlain' | translate }}<app-info-tooltip explanationKey="results.explainPayback" /></h3>
         <p class="kpi-value">
           <ng-container *ngIf="res.finance.payback_years !== null; else noPayback">
             {{ res.finance.payback_years }} {{ 'results.years' | translate }}
@@ -34,14 +37,14 @@
       </div>
 
       <div class="kpi-card">
-        <h3>{{ 'results.year1Savings' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.year1SavingsPlain' | translate }}<app-info-tooltip explanationKey="results.explainYear1Savings" /></h3>
         <p class="kpi-value">
           {{ res.finance.savings_year1 | number: '1.0-0' }}
         </p>
       </div>
 
       <div class="kpi-card">
-        <h3>{{ 'results.roi' | translate }}</h3>
+        <h3 class="kpi-title-row">{{ 'results.roiPlain' | translate }}<app-info-tooltip explanationKey="results.explainRoi" /></h3>
         <p class="kpi-value">
           <ng-container *ngIf="res.finance.roi !== null; else noRoi">
             {{ (res.finance.roi * 100) | number: '1.0-0' }} %
@@ -54,6 +57,7 @@
     <section class="results-charts">
       <div class="chart-card">
         <h3>{{ 'results.monthlyProduction' | translate }}</h3>
+        <p class="chart-desc">{{ 'results.chartMonthlyDesc' | translate }}</p>
         <div class="chart-bars" *ngIf="monthlyEnergy().length > 0">
           <div
             class="chart-bar-row"
@@ -74,7 +78,8 @@
       </div>
 
       <div class="chart-card">
-        <h3>{{ 'results.cumulativeCashflow' | translate }}</h3>
+        <h3>{{ 'results.cumulativeCashflowPlain' | translate }}</h3>
+        <p class="chart-desc">{{ 'results.chartCashflowDesc' | translate }}</p>
         <div class="chart-bars" *ngIf="cashflow().length > 0">
           <div
             class="chart-bar-row"
@@ -98,8 +103,223 @@
       </div>
     </section>
 
+    <section class="results-sensitivity" *ngIf="res.sensitivity">
+      <h3 class="section-title-row">{{ 'results.sensitivityTitle' | translate }}<app-info-tooltip explanationKey="results.explainSensitivity" /></h3>
+      <p class="results-sensitivity-desc results-section-intro">{{ 'results.introSensitivity' | translate }}</p>
+      <div class="sensitivity-1d">
+        <h4>{{ 'results.sensitivity1D' | translate }}</h4>
+        <div class="sensitivity-1d-chart">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="sensitivity-svg">
+            <polyline
+              *ngIf="res.sensitivity.one_d.values.length"
+              [attr.points]="sensitivity1DPoints(res.sensitivity.one_d).payback"
+              class="sensitivity-line sensitivity-line-payback"
+            />
+            <polyline
+              *ngIf="res.sensitivity.one_d.values.length"
+              [attr.points]="sensitivity1DPoints(res.sensitivity.one_d).npv"
+              class="sensitivity-line sensitivity-line-npv"
+            />
+          </svg>
+          <div class="sensitivity-1d-labels">
+            <span>{{ 'results.payback' | translate }}</span>
+            <span>{{ 'results.npv' | translate }}</span>
+          </div>
+        </div>
+        <div class="sensitivity-1d-axes">
+          <span>{{ res.sensitivity.one_d.values[0] | number: '1.2-2' }}</span>
+          <span>{{ res.sensitivity.one_d.values[res.sensitivity.one_d.values.length - 1] | number: '1.2-2' }}</span>
+        </div>
+      </div>
+      <div class="sensitivity-2d">
+        <h4>{{ 'results.sensitivity2D' | translate }} ({{ 'results.npv' | translate }})</h4>
+        <div class="heatmap-wrap">
+          <table class="heatmap">
+            <thead>
+              <tr>
+                <th></th>
+                <th *ngFor="let x of res.sensitivity.two_d.x_axis">{{ x | number: '1.2-2' }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let yVal of res.sensitivity.two_d.y_axis; let j = index">
+                <th>{{ (yVal * 100) | number: '0.0-0' }}%</th>
+                <td
+                  *ngFor="let xVal of res.sensitivity.two_d.x_axis; let i = index"
+                  [style.background]="heatmapColor(res.sensitivity.two_d.npv_grid[i][j], gridMinMax(res.sensitivity.two_d.npv_grid).min, gridMinMax(res.sensitivity.two_d.npv_grid).max)"
+                  [title]="res.sensitivity.two_d.npv_grid[i][j] != null ? (res.sensitivity.two_d.npv_grid[i][j] | number: '1.0-0') : 'n/a'"
+                >
+                  {{ res.sensitivity.two_d.npv_grid[i][j] != null ? (res.sensitivity.two_d.npv_grid[i][j] | number: '1.0-0') : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="heatmap-axes-desc">{{ 'results.sensitivity2DAxes' | translate }}</p>
+      </div>
+    </section>
+
+    <section class="results-monte-carlo" *ngIf="res.monte_carlo">
+      <h3 class="section-title-row">{{ 'results.monteCarloTitle' | translate }}<app-info-tooltip explanationKey="results.explainMonteCarlo" /></h3>
+      <p class="results-monte-carlo-desc results-section-intro">{{ 'results.introMonteCarlo' | translate }}</p>
+      <div class="monte-carlo-stats">
+        <div class="monte-carlo-card">
+          <h4>{{ 'results.paybackPlain' | translate }} ({{ 'results.p10p50p90Plain' | translate }})</h4>
+          <p class="monte-carlo-values">
+            {{ res.monte_carlo.payback.p10 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p50 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p90 | number: '1.1-1' }}
+            {{ 'results.years' | translate }}
+          </p>
+          <p *ngIf="res.monte_carlo.payback.prob_under_target != null" class="monte-carlo-prob">
+            {{ 'results.probPaybackUnderTarget' | translate }}: {{ (res.monte_carlo.payback.prob_under_target * 100) | number: '1.0-1' }}%
+          </p>
+        </div>
+        <div class="monte-carlo-card">
+          <h4>{{ 'results.npvPlain' | translate }} ({{ 'results.p10p50p90Plain' | translate }})</h4>
+          <p class="monte-carlo-values">
+            {{ res.monte_carlo.npv.p10 | number: '1.0-0' }} / {{ res.monte_carlo.npv.p50 | number: '1.0-0' }} / {{ res.monte_carlo.npv.p90 | number: '1.0-0' }}
+          </p>
+        </div>
+      </div>
+      <p class="monte-carlo-n">{{ 'results.monteCarloN' | translate }}: {{ res.monte_carlo.n_trials }}</p>
+      <div class="monte-carlo-histograms" *ngIf="res.monte_carlo.histogram_bins">
+        <div class="histogram-wrap">
+          <h4>{{ 'results.payback' | translate }} {{ 'results.distribution' | translate }}</h4>
+          <div class="histogram-bars">
+            <div
+              *ngFor="let c of res.monte_carlo.histogram_bins.payback.counts; let i = index"
+              class="histogram-bar"
+              [style.height.%]="(sumCounts(res.monte_carlo.histogram_bins!.payback.counts) ? (c / sumCounts(res.monte_carlo.histogram_bins!.payback.counts)) * 100 : 0)"
+              [title]="(res.monte_carlo.histogram_bins!.payback.edges[i] | number: '1.1-1') + ' - ' + (res.monte_carlo.histogram_bins!.payback.edges[i+1] | number: '1.1-1')"
+            ></div>
+          </div>
+        </div>
+        <div class="histogram-wrap">
+          <h4>{{ 'results.npv' | translate }} {{ 'results.distribution' | translate }}</h4>
+          <div class="histogram-bars">
+            <div
+              *ngFor="let c of res.monte_carlo.histogram_bins.npv.counts; let i = index"
+              class="histogram-bar"
+              [style.height.%]="(sumCounts(res.monte_carlo.histogram_bins!.npv.counts) ? (c / sumCounts(res.monte_carlo.histogram_bins!.npv.counts)) * 100 : 0)"
+              [title]="(res.monte_carlo.histogram_bins!.npv.edges[i] | number: '1.0-0') + ' - ' + (res.monte_carlo.histogram_bins!.npv.edges[i+1] | number: '1.0-0')"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-break-even" *ngIf="res.break_even">
+      <h3 class="section-title-row">{{ 'results.breakEvenTitle' | translate }}<app-info-tooltip explanationKey="results.explainBreakEven" /></h3>
+      <p class="results-break-even-desc results-section-intro">{{ 'results.introBreakEven' | translate }}</p>
+      <div class="break-even-cards">
+        <div class="break-even-card">
+          <h4>{{ 'results.breakEvenCapexPlain' | translate }}</h4>
+          <p class="break-even-value">
+            {{ res.break_even.break_even_capex != null ? (res.break_even.break_even_capex | number: '1.0-0') : 'n/a' }}
+          </p>
+          <p class="break-even-meta">{{ 'results.breakEvenCapexMeta' | translate }} {{ res.break_even.target_payback_years }} {{ 'results.years' | translate }}</p>
+        </div>
+        <div class="break-even-card">
+          <h4>{{ 'results.breakEvenPricePlain' | translate }}</h4>
+          <p class="break-even-value">
+            {{ res.break_even.break_even_price_buy != null ? (res.break_even.break_even_price_buy | number: '1.3-3') : 'n/a' }}
+          </p>
+          <p class="break-even-meta">{{ 'results.breakEvenPriceMeta' | translate }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-kwp-opt" *ngIf="res.kwp_optimization">
+      <h3 class="section-title-row">{{ 'results.kwpOptTitle' | translate }}<app-info-tooltip explanationKey="results.explainKwpOpt" /></h3>
+      <p class="results-kwp-opt-desc results-section-intro">{{ 'results.introKwpOpt' | translate }}</p>
+      <div class="kwp-opt-recommendations">
+        <div class="kwp-opt-card">
+          <h4>{{ 'results.kwpOptByNpv' | translate }}</h4>
+          <p class="kwp-opt-value">{{ res.kwp_optimization.recommended_kwp_npv | number: '1.1-1' }} kWp</p>
+        </div>
+        <div class="kwp-opt-card">
+          <h4>{{ 'results.kwpOptByPayback' | translate }}</h4>
+          <p class="kwp-opt-value">{{ res.kwp_optimization.recommended_kwp_payback | number: '1.1-1' }} kWp</p>
+        </div>
+      </div>
+      <div class="kwp-opt-curve">
+        <h4>{{ 'results.npv' | translate }} vs kWp</h4>
+        <div class="curve-bars">
+          <div
+            *ngFor="let p of res.kwp_optimization.curve"
+            class="curve-bar-row"
+            [title]="'kWp: ' + (p.kwp | number: '1.1-1') + ', NPV: ' + (p.npv | number: '1.0-0')"
+          >
+            <span class="curve-bar-label">{{ p.kwp | number: '1.1-1' }}</span>
+            <div class="curve-bar-track">
+              <div
+                class="curve-bar-fill"
+                [style.width.%]="(maxCurveNpv() - minCurveNpv() ? (p.npv - minCurveNpv()) / (maxCurveNpv() - minCurveNpv()) * 100 : 0)"
+              ></div>
+            </div>
+            <span class="curve-bar-value">{{ p.npv | number: '1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-scenarios" *ngIf="res.scenarios">
+      <h3 class="section-title-row">{{ 'results.scenariosTitle' | translate }}<app-info-tooltip explanationKey="results.explainScenarios" /></h3>
+      <p class="results-scenarios-desc results-section-intro">{{ 'results.introScenarios' | translate }}</p>
+      <div class="scenarios-tables">
+        <div class="scenario-table-wrap">
+          <h4>{{ 'results.scenariosBySelfConsumption' | translate }}</h4>
+          <table class="scenario-table">
+            <thead>
+              <tr>
+                <th>{{ 'results.scenarioSelfConsumption' | translate }}</th>
+                <th>{{ 'results.payback' | translate }}</th>
+                <th>{{ 'results.npv' | translate }}</th>
+                <th>{{ 'results.year1Savings' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of res.scenarios.by_self_consumption"
+                [class.base-scenario]="row.self_consumption === store.lastRequest()?.economics?.self_consumption"
+              >
+                <td>{{ (row.self_consumption * 100) | number: '1.0-0' }}%</td>
+                <td>{{ row.payback_years != null ? (row.payback_years + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
+                <td>{{ row.npv != null ? (row.npv | number: '1.0-0') : 'n/a' }}</td>
+                <td>{{ row.savings_year1 | number: '1.0-0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scenario-table-wrap">
+          <h4>{{ 'results.scenariosByPrice' | translate }}</h4>
+          <table class="scenario-table">
+            <thead>
+              <tr>
+                <th>{{ 'results.scenarioPriceBuy' | translate }}</th>
+                <th>{{ 'results.payback' | translate }}</th>
+                <th>{{ 'results.npv' | translate }}</th>
+                <th>{{ 'results.year1Savings' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of res.scenarios.by_price_buy"
+                [class.base-scenario]="row.price_buy === store.lastRequest()?.economics?.price_buy"
+              >
+                <td>{{ row.price_buy | number: '1.2-2' }}</td>
+                <td>{{ row.payback_years != null ? (row.payback_years + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
+                <td>{{ row.npv != null ? (row.npv | number: '1.0-0') : 'n/a' }}</td>
+                <td>{{ row.savings_year1 | number: '1.0-0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <section class="results-insights" *ngIf="res.insights.length > 0">
       <h3>{{ 'results.insights' | translate }}</h3>
+      <p class="results-section-intro">{{ 'results.introInsights' | translate }}</p>
       <ul>
         <li
           *ngFor="let insight of res.insights"

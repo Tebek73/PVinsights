@@ -45,7 +45,12 @@ app.post('/api/simulate', async (req, res) => {
         console.error('\n[ERROR] /api/simulate failed:', error);
         if (error instanceof Error && error.stack)
             console.error(error.stack);
-        const err = error;
+        // #region agent log
+        const errObj = error;
+        const msg = typeof error?.message === 'string' ? error.message : String(error);
+        fetch('http://127.0.0.1:7574/ingest/ce93c33b-4bf9-4e03-bcd5-330522c60b2c', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b09851' }, body: JSON.stringify({ sessionId: 'b09851', location: 'index.ts:simulate:catch', message: 'simulate failed', data: { message: msg?.slice(0, 200), name: error?.name }, timestamp: Date.now(), hypothesisId: 'H2-H4' }) }).catch(() => { });
+        // #endregion
+        const err = errObj;
         const data = err?.response?.data;
         const message = (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string'
             ? data.message

@@ -1,3 +1,31 @@
+# MkDocs static site output
+docs/site/
+
+# Optional documentation (keep local, don't upload)
+docs/
+**/*.md
+**/*.pdf
+
+# Generated TypeDoc HTML (optional)
+docs/manual/typedoc-server/
+
+# PDF build intermediates
+docs/pdf/_merged-*.md
+
+# Cursor / IDE
+.cursor/
+**/.cursor/
+**/agent-transcripts/
+
+# Dependencies / builds
+**/node_modules/
+server/dist/
+client/dist/
+
+# Static docs output we DO commit:
+# docs/html/codebase/
+# docs/html/business/
+
 # Angular specific
 /dist/
 /out-tsc/

@@ -50,22 +50,31 @@
   color: #9ca3af;
 }
 
-.wizard-area-type {
-  margin-top: 0.5rem;
-  max-width: 28rem;
-}
-
 .wizard-location-block {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.35s ease-out, opacity 0.3s ease-out;
+  margin-top: 0.5rem;
 }
 
-.wizard-location-block.wizard-location-visible {
-  max-height: 600px;
-  opacity: 1;
-  margin-top: 1rem;
+.wizard-full-width {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.wizard-full-width textarea {
+  width: 100%;
+  min-height: 3rem;
+  resize: vertical;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.wizard-optional-block {
+  margin-top: 0.75rem;
 }
 
 .wizard-grid {

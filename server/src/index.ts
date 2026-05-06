@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { SimulateSchema } from './schema';
+import { preprocessSimulateBody } from './preprocess';
 import { runSimulation } from './simulate';
 
 dotenv.config(); //incarca variabilele din .env in process.env
@@ -34,13 +35,14 @@ app.get('/api/health', (req, res) => {
 const port = process.env.PORT || 3000;
 
 app.post('/api/simulate', async (req, res) => {
-  const parsed = SimulateSchema.safeParse(req.body);
+  const { payload, warnings: preprocessWarnings } = preprocessSimulateBody(req.body);
+  const parsed = SimulateSchema.safeParse(payload);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.format() });
   }
 
   try {
-    const result = await runSimulation(parsed.data);
+    const result = await runSimulation(parsed.data, preprocessWarnings);
     res.json(result);
   } catch (error: unknown) {
     console.error('\n[ERROR] /api/simulate failed:', error);

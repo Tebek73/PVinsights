@@ -2,6 +2,13 @@ import { Injectable, signal } from '@angular/core';
 
 export type Lang = 'en' | 'ro';
 
+/**
+ * Romanian copy conventions (keep wording aligned across the app):
+ * - VAN = net present value (NPV)
+ * - „Recuperarea investiției” = simple payback unless we say „actualizată” for discounted
+ * - „Rată de actualizare” = discount rate
+ * - „Producție estimată” / „estimate PVGIS” = model output, not onsite metering
+ */
 const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   // App shell
   'app.title': { en: 'Solar PV Feasibility', ro: 'Fezabilitate PV solar' },
@@ -16,27 +23,13 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
 
   // Wizard
   'wizard.title': { en: 'Solar PV feasibility wizard', ro: 'Asistent fezabilitate PV solar' },
-  'wizard.subtitle': { en: 'Follow the 3 steps to run a PVGIS-based simulation.', ro: 'Urmează cei 3 pași pentru a rula o simulare bazată pe PVGIS.' },
+  'wizard.subtitle': {
+    en: 'Follow the three steps to estimate solar electricity and savings using PVGIS.',
+    ro: 'Urmează cei trei pași pentru a estima energia solară și economiile cu PVGIS.'
+  },
   'wizard.step1': { en: '1. Location', ro: '1. Locație' },
   'wizard.step2': { en: '2. PV system', ro: '2. Sistem PV' },
   'wizard.step3': { en: '3. Economics', ro: '3. Economie' },
-  'wizard.areaTypeQuestion': {
-    en: 'What best describes the installation site?',
-    ro: 'Cum descrii cel mai bine locul de instalare?'
-  },
-  'wizard.areaTypeRural': {
-    en: 'Rural (open land, few buildings/trees)',
-    ro: 'Rural (teren deschis, puține clădiri/copaci)'
-  },
-  'wizard.areaTypeSuburban': {
-    en: 'Suburban (houses, some trees)',
-    ro: 'Suburban (case, câțiva copaci)'
-  },
-  'wizard.areaTypeUrban': {
-    en: 'Urban (buildings, more shading)',
-    ro: 'Urban (clădiri, mai multă umbrire)'
-  },
-  'wizard.areaTypePlaceholder': { en: 'Select...', ro: 'Alege...' },
   'wizard.location.hint': {
     en: 'Search for an address or place the pin on the map. The map and pin stay in sync.',
     ro: 'Caută o adresă sau plasează pinul pe hartă. Harta și pinul rămân sincronizate.'
@@ -54,6 +47,14 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   },
   'wizard.systemSize': { en: 'System size (kWp)', ro: 'Putere (kWp)' },
   'wizard.systemLosses': { en: 'System losses (%)', ro: 'Pierderi sistem (%)' },
+  'wizard.nearShadingLoss': {
+    en: 'Nearby shading loss (%) — your assumption',
+    ro: 'Pierdere umbrire obiecte apropiate (%) — ipoteza ta'
+  },
+  'wizard.hintNearShading': {
+    en: 'Trees, chimneys, buildings not in PVGIS terrain horizon. 0 if none.',
+    ro: 'Copaci, coșuri, clădiri care nu sunt în orizontul teren PVGIS. 0 dacă nu e cazul.'
+  },
   'wizard.useHorizon': { en: 'Include terrain horizon shading', ro: 'Include umbrirea orizontului teren' },
   'wizard.optimalAngles': { en: 'Optimize tilt and azimuth automatically', ro: 'Optimizează înclinarea și azimutul automat' },
   'wizard.advancedPv': { en: 'Advanced PV settings', ro: 'Setări PV avansate' },
@@ -70,15 +71,65 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'wizard.mountingBuilding': { en: 'Building', ro: 'Pe clădire' },
   'wizard.radDatabase': { en: 'Radiation database (optional)', ro: 'Bază radiație (opțional)' },
   'wizard.radPlaceholder': { en: 'leave empty for default', ro: 'lasă gol pentru implicit' },
+  'wizard.monthlyHistoryYears': {
+    en: 'Historical monthly chart (calendar years, 0–20)',
+    ro: 'Grafic lunar istoric (ani calendaristici, 0–20)'
+  },
+  'wizard.hintMonthlyHistoryYears': {
+    en: 'Default 10. Use 0 for one typical 12‑month curve only. Larger numbers add extra PVGIS requests—one per recent calendar year (max 20)—so charts load more slowly.',
+    ro: 'Implicit 10. Pune 0 dacă vrei doar o curbă tipică pe 12 luni. Valori mai mari cer mai multe cereri PVGIS (una per an calendaristic recent, max 20), deci simularea durează mai mult.'
+  },
   'wizard.economics.hint': {
-    en: 'Provide basic economic assumptions. The backend will compute savings, payback, and cashflow.',
-    ro: 'Introdu ipotezele economice de bază. Serverul va calcula economiile, recuperarea și fluxul de numerar.'
+    en: 'Enter the basics about prices and costs. We estimate savings, payback time, and cashflow from these.',
+    ro: 'Introdu datele de bază despre prețuri și costuri. Din ele estimăm economiile, timpul de recuperare a investiției și fluxul de numerar.'
+  },
+  'wizard.currency': { en: 'Currency', ro: 'Monedă' },
+  'wizard.hintCurrency': {
+    en: 'All costs and savings will use this currency (no conversion).',
+    ro: 'Toate costurile și economiile vor folosi această monedă (fără conversie).'
   },
   'wizard.capex': { en: 'System cost (CAPEX)', ro: 'Cost sistem (CAPEX)' },
   'wizard.priceBuy': { en: 'Electricity price (buy)', ro: 'Preț energie (cumpărare)' },
   'wizard.selfConsumption': { en: 'Self-consumption (%)', ro: 'Autoconsum (%)' },
   'wizard.priceSell': { en: 'Export price (optional)', ro: 'Preț export (opțional)' },
   'wizard.advancedEconomics': { en: 'Advanced economics', ro: 'Economie avansată' },
+  'wizard.priceSellEscalation': { en: 'Export price escalation (%/year)', ro: 'Creștere preț export (%/an)' },
+  'wizard.hintPriceSellEscalation': { en: 'Annual escalation of export tariff.', ro: 'Creștere anuală a tarifului de export.' },
+  'wizard.opexEscalation': { en: 'OPEX escalation (%/year)', ro: 'Creștere OPEX (%/an)' },
+  'wizard.hintOpexEscalation': { en: 'Annual escalation of operating costs.', ro: 'Creștere anuală a costurilor de exploatare.' },
+  'wizard.subsidyAmount': { en: 'Subsidy (fixed amount)', ro: 'Subvenție (sumă fixă)' },
+  'wizard.hintSubsidyAmount': { en: 'Reduces effective CAPEX in year 0.', ro: 'Reduce CAPEX-ul efectiv în anul 0.' },
+  'wizard.subsidyPercentCapex': { en: 'Subsidy (% of CAPEX)', ro: 'Subvenție (% din CAPEX)' },
+  'wizard.hintSubsidyPercent': { en: 'Share of CAPEX covered by subsidy.', ro: 'Fracțiune din CAPEX acoperită de subvenție.' },
+  'wizard.optionalConsumptionKwp': { en: 'Optional: consumption model & kWp sweep', ro: 'Opțional: model consum & scanare kWp' },
+  'wizard.optionalConsumptionKwpHint': {
+    en: 'If you enter annual consumption, we estimate how much solar you use yourself from that profile. Add both consumption and a simple cost model to compare different system sizes.',
+    ro: 'Dacă introduci consumul anual, estimăm cât din solar îl folosești tu din profilul de sarcină. Cu consum și un model simplu de cost putem compara și dimensiuni diferite ale sistemului.'
+  },
+  'wizard.consumptionAnnualKwh': { en: 'Annual consumption (kWh/year)', ro: 'Consum anual (kWh/an)' },
+  'wizard.consumptionDaytimePct': { en: 'Daytime load share (%)', ro: 'Partea consumului zi (%)' },
+  'wizard.monthlyLoadProfile': { en: 'Monthly load shape (optional, 12 numbers)', ro: 'Profil lunar consum (opțional, 12 numere)' },
+  'wizard.monthlyLoadProfilePlaceholder': {
+    en: 'e.g. relative weights: 80 75 70 ... (any scale; we normalize)',
+    ro: 'ex. ponderi relative: 80 75 70 ... (orice scară; le normalizăm automat)'
+  },
+  'wizard.hintMonthlyLoadProfile': {
+    en: 'Leave empty for uniform monthly consumption.',
+    ro: 'Lasă gol pentru consum lunar uniform.'
+  },
+  'wizard.costModelFixed': { en: 'Fixed cost component', ro: 'Cost fix componentă' },
+  'wizard.costModelPerKwp': { en: 'Variable cost per kWp', ro: 'Cost variabil per kWp' },
+  'wizard.kwpSearchMin': { en: 'kWp search min', ro: 'kWp min căutare' },
+  'wizard.kwpSearchMax': { en: 'kWp search max', ro: 'kWp max căutare' },
+  'wizard.kwpSearchStep': { en: 'kWp step', ro: 'Pas kWp' },
+  'wizard.optionalMonteCarlo': { en: 'Optional: Monte Carlo risk', ro: 'Opțional: risc Monte Carlo' },
+  'wizard.optionalMonteCarloHint': {
+    en: 'Runs many random “what-if” runs so you can see a range of outcomes, not just one number.',
+    ro: 'Rulează multe scenarii aleatoare „dacă ar fi așa”, ca să vezi un interval de rezultate, nu o singură valoare.'
+  },
+  'wizard.runMonteCarlo': { en: 'Include risk scenarios (Monte Carlo)', ro: 'Include scenarii de risc (Monte Carlo)' },
+  'wizard.monteCarloTrials': { en: 'Number of trials', ro: 'Număr simulări' },
+  'wizard.monteCarloTargetPayback': { en: 'Target payback (years, optional)', ro: 'Țintă recuperare (ani, opțional)' },
   'wizard.opex': { en: 'OPEX yearly', ro: 'OPEX anual' },
   'wizard.degradation': { en: 'Degradation (%/year)', ro: 'Degradare (%/an)' },
   'wizard.analysisYears': { en: 'Analysis years', ro: 'Ani analiză' },
@@ -92,10 +143,63 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'wizard.close': { en: 'Close', ro: 'Închide' },
 
   // Results
+  'results.modelWarningsTitle': { en: 'Issues during simulation', ro: 'Probleme întâlnite în simulare' },
+  'results.pvgisEnergyTitle': { en: 'Annual electricity from PVGIS', ro: 'Energie anuală din PVGIS' },
+  'results.annualKwhPvgisEstimate': { en: 'Annual estimate (PVGIS)', ro: 'Estimare anuală (PVGIS)' },
+  'results.rawAnnualKwh': { en: 'Before nearby shading (PVGIS)', ro: 'Înainte de pierderea de umbrire apropiată (PVGIS)' },
+  'results.adjustedAnnualKwh': { en: 'After your nearby shading % (used in results)', ro: 'După procentul tău de pierdere la umbrire apropiată (folosit în rezultate)' },
+  'results.horizonSourceLabel': { en: 'Horizon source', ro: 'Sursă orizont' },
+  'results.horizonSourcePrinthorizon': {
+    en: 'PVGIS custom terrain horizon (printhorizon)',
+    ro: 'Orizont teren personalizat PVGIS (printhorizon)'
+  },
+  'results.horizonSourceInternal': {
+    en: 'PVGIS internal terrain horizon',
+    ro: 'Orizont teren intern PVGIS'
+  },
+  'results.horizonSourceDisabled': { en: 'Horizon shading disabled (flat)', ro: 'Umbrire orizont dezactivată (plat)' },
+  'results.nearShadingApplied': { en: 'Nearby shading loss applied', ro: 'Pierdere umbrire obiecte apropiate aplicată' },
+  'results.mcYieldBasisLabel': { en: 'How solar output varies in the trials', ro: 'Cum variază producția solară în simulări' },
+  'results.mcYieldBasisPlain': {
+    en: 'Each trial nudges yearly electricity output using PVGIS’s typical year‑to‑year weather spread, and lightly varies a few numbers you entered (costs, self‑consumption, etc.). This shows uncertainty from those factors—not every real‑world risk.',
+    ro: 'La fiecare simulare modificăm ușor producția anuală folosind variabilitatea tipică an‑la‑an din PVGIS și variazăm puțin unele valori introduse de tine (costuri, autoconsum etc.). Vezi astfel incertitudinea din acești factori — nu toate riscurile din teren.'
+  },
+  'results.explainMcYieldBasisTooltip': {
+    en: 'PVGIS publishes how much annual yield tends to swing between weather years; we use that as a simple random shake to yearly production. Optional extras can add more jitter.',
+    ro: 'PVGIS indică cât de mult tinde să oscileze producția anuală între ani din cauza vremii; folosim asta ca o „zguduire” aleatoare simplă a producției. Opțional se poate adăuga și alt jitter.'
+  },
+  'results.simplePaybackPlain': { en: 'Simple payback time', ro: 'Recuperare simplă' },
+  'results.discountedPaybackPlain': { en: 'Discounted payback time', ro: 'Recuperare actualizată' },
+  'results.effectiveCapexPlain': { en: 'Effective upfront cost', ro: 'Cost inițial efectiv' },
+  'results.lcoePlain': { en: 'Levelised cost of electricity (LCOE)', ro: 'Cost nivelat al energiei (LCOE)' },
+  'results.irrPlain': { en: 'Internal rate of return (IRR)', ro: 'Rata internă de rentabilitate (IRR)' },
+  'results.consumptionTitle': { en: 'Consumption vs solar production', ro: 'Consum vs producție solară' },
+  'results.introConsumptionAnalysis': {
+    en: 'Estimated annual self-consumption and exports from the simplified monthly model.',
+    ro: 'Autoconsum și exporturi anuale estimate din modelul lunar simplificat.'
+  },
+  'results.selfConsumedKwh': { en: 'Self-consumed solar (kWh/year)', ro: 'Solar autoconsumat (kWh/an)' },
+  'results.exportedKwh': { en: 'Exported solar (kWh/year)', ro: 'Solar exportat (kWh/an)' },
+  'results.selfConsumptionRatioResult': { en: 'Implied self-consumption ratio', ro: 'Autoconsum implicit' },
   'results.title': { en: 'Simulation results', ro: 'Rezultate simulare' },
+  'results.feasibilityScore': { en: 'Feasibility', ro: 'Fezabilitate' },
+  'results.feasibilityAriaPrefix': { en: 'PV feasibility score', ro: 'Scor fezabilitate PV' },
+  'results.feasibilityDisclaimer': {
+    en: 'Decision support only — not investment advice.',
+    ro: 'Doar sprijin pentru decizie — nu este consultanță financiară.'
+  },
+  'results.explainFeasibilityScore': {
+    en: 'Single score from 0–100 blending economics, how sunny your site is, and—if you enabled risk scenarios—how often random trials look favorable. It simplifies many inputs into one number and still reflects whatever assumptions you chose.',
+    ro: 'Scor unic 0–100 care combină latura financiară, cât de bună e soarele la locația ta și — dacă ai activat scenariile de risc — cât de des ies rezultate favorabile în simulările aleatoare. Este un rezumat simplificat și reflectă totuși ipotezele tale.'
+  },
+  'results.feasibilityBandPoor': { en: 'Poor', ro: 'Slab' },
+  'results.feasibilityBandMarginal': { en: 'Marginal', ro: 'Marginal' },
+  'results.feasibilityBandAcceptable': { en: 'Acceptable', ro: 'Acceptabil' },
+  'results.feasibilityBandGood': { en: 'Good', ro: 'Bun' },
+  'results.feasibilityBandExcellent': { en: 'Excellent', ro: 'Excelent' },
   'results.subtitle': {
-    en: 'Review PV yield, key KPIs, cashflow, and insights for your scenario.',
-    ro: 'Revizuiește producția PV, KPI-urile, fluxul de numerar și recomandările pentru scenariul tău.'
+    en: 'See estimated solar production (PVGIS), money outcomes from your inputs, and notes about assumptions.',
+    ro: 'Vezi producția solară estimată (PVGIS), efectele financiare din ipotezele tale și note despre ce înseamnă rezultatele.'
   },
   'results.annualEnergy': { en: 'Annual energy', ro: 'Energie anuală' },
   'results.specificYield': { en: 'Specific yield', ro: 'Randament specific' },
@@ -106,7 +210,7 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'results.years': { en: 'years', ro: 'ani' },
   'results.unitKwhYear': { en: 'kWh/year', ro: 'kWh/an' },
   'results.unitKwhKwpYear': { en: 'kWh/kWp·year', ro: 'kWh/kWp·an' },
-  'results.monthlyProduction': { en: 'Monthly PV production', ro: 'Producție PV lunară' },
+  'results.monthlyProduction': { en: 'Monthly electricity (PVGIS estimate)', ro: 'Energie lunară (estimate PVGIS)' },
   'results.cumulativeCashflow': { en: 'Cumulative cashflow', ro: 'Flux numerar cumulat' },
   'results.npv': { en: 'NPV', ro: 'VAN' },
   'results.scenariosTitle': { en: 'Scenario comparison', ro: 'Comparare scenarii' },
@@ -120,11 +224,44 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'results.sensitivity1D': { en: '1D: Payback & NPV vs electricity price', ro: '1D: Recuperare și VAN vs preț energie' },
   'results.sensitivity2D': { en: '2D heatmap', ro: 'Hartă 2D' },
   'results.sensitivity2DAxes': { en: 'Rows: self-consumption %. Columns: electricity price.', ro: 'Rânduri: autoconsum %. Coloane: preț energie.' },
-  'results.monteCarloTitle': { en: 'Monte Carlo risk analysis', ro: 'Analiză risc Monte Carlo' },
-  'results.monteCarloDesc': { en: 'Payback and NPV distribution using PVGIS yield uncertainty (SD_y).', ro: 'Distribuția recuperării și VAN folosind incertitudinea PVGIS (SD_y).' },
+  'results.sensitivityAxisElectricityPrice': { en: 'Electricity price', ro: 'Preț energie' },
+  'results.sensitivityAxisSelfConsumption': { en: 'Self-consumption', ro: 'Autoconsum' },
+  'results.sensitivityTooltipPrice': { en: 'Price', ro: 'Preț' },
+  'results.sensitivityHeatmapCorner': { en: 'Self-consumption \\ Price', ro: 'Autoconsum \\ Preț' },
+  'results.sensitivityAxisNpvMoney': { en: 'NPV', ro: 'VAN' },
+  'results.na': { en: 'N/A', ro: 'N/A' },
+  'results.monteCarloTitle': { en: 'Risk scenarios (Monte Carlo)', ro: 'Scenarii de risc (Monte Carlo)' },
+  'results.monteCarloDesc': {
+    en: 'Distributions of payback time and net present value when yearly sunshine and a few cost assumptions move randomly within plausible ranges.',
+    ro: 'Distribuții pentru timpul de recuperare și valoarea actuală netă când soarele pe ani și câteva ipoteze de cost variază aleator în limite plauzibile.'
+  },
+  'results.monteCarloIntroRisk': {
+    en: 'This simulation varies solar production and selected financial assumptions to estimate the range of possible outcomes.',
+    ro: 'Această simulare variază producția solară și unele ipoteze financiare pentru a estima intervalul de rezultate posibile.'
+  },
+  'results.noPaybackWithinAnalysis': { en: 'No payback within analysis period', ro: 'Nu se recuperează în perioada de analiză' },
+  'results.chanceNpvPositive': { en: 'Share of trials with profit (NPV above zero)', ro: 'Fracție din simulări cu profit (VAN peste zero)' },
   'results.probPaybackUnderTarget': { en: 'P(payback ≤ target)', ro: 'P(recuperare ≤ țintă)' },
+  'results.probPaybackUnderTargetPlain': {
+    en: 'Chance payback is within your target',
+    ro: 'Șansa să recuperezi investiția în termenul ales'
+  },
+  'results.explainProbPaybackUnderTarget': {
+    en: 'Uses your optional target payback from the wizard and counts what fraction of trials finish sooner.',
+    ro: 'Folosește ținta opțională de recuperare din asistent și arată ce fracțiune din simulări se încadrează mai devreme.'
+  },
   'results.monteCarloN': { en: 'Trials', ro: 'Simulări' },
   'results.distribution': { en: 'distribution', ro: 'distribuție' },
+  'results.histogramDesc': {
+    en: 'Each bar shows how often the outcome falls into that range.',
+    ro: 'Fiecare bară arată cât de des rezultatul cade în acel interval.'
+  },
+  'results.legendFrequency': { en: 'Frequency (% of trials)', ro: 'Frecvență (% din simulări)' },
+  'results.axisYFrequency': { en: 'Frequency (% of trials)', ro: 'Frecvență (% din simulări)' },
+  'results.axisXPaybackBins': { en: 'Payback bin (years)', ro: 'Interval recuperare (ani)' },
+  'results.axisXNpvBins': { en: 'NPV ranges (money)', ro: 'Intervale VAN (bani)' },
+  'results.legendNpvZero': { en: 'NPV = 0', ro: 'VAN = 0' },
+  'results.outliersClipped': { en: 'Outliers clipped', ro: 'Valori extreme tăiate' },
   'results.breakEvenTitle': { en: 'Break-even metrics', ro: 'Metrici prag de rentabilitate' },
   'results.breakEvenDesc': { en: 'Decision boundaries for investment.', ro: 'Limite de decizie pentru investiție.' },
   'results.breakEvenCapexTitle': { en: 'Max CAPEX for target payback', ro: 'CAPEX max pentru recuperare țintă' },
@@ -161,31 +298,86 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'results.explainSpecificYield': { en: 'How much electricity you get per kW of installed panels. Higher means a sunnier location.', ro: 'Câtă energie primești per kW panouri. Valori mari = loc mai însorit.' },
   'results.explainCapacityFactor': { en: 'What fraction of the time your panels would need to run at full power to make this much energy. Shows how sunny it is.', ro: 'Ce fracțiune din timp panourile ar trebui să meargă la putere maximă pentru această energie.' },
   'results.explainPayback': { en: 'Number of years until your total savings equal what you paid for the system.', ro: 'Numărul de ani până când economiile totale egalează ce ai plătit pentru sistem.' },
+  'results.explainPvgisEnergyBasis': {
+    en: 'PVGIS first gives a baseline. If you enter extra shading from trees or buildings, we only scale the energy down for that part—geometry stays the same.',
+    ro: 'PVGIS dă mai întâi o valoare de referință. Dacă introduci pierderi suplimentare de la copaci sau clădiri, reducem doar energia pentru acea pierdere — geometria rămâne aceeași.'
+  },
+  'results.explainSimplePayback': {
+    en: 'Rough number of years until money saved adds up to what you paid—without adjusting future euros for time.',
+    ro: 'Număr orientativ de ani până economiile cumulate ajung la ce ai plătit — fără să „discountăm” euro-ii viitori.'
+  },
+  'results.explainDiscountedPayback': {
+    en: 'Years until discounted savings recover cost—future money counts for less using your discount rate.',
+    ro: 'Ani până când economiile actualizate acoperă costul — banii viitori „valorează mai puțin” folosind rata aleasă.'
+  },
+  'results.explainEffectiveCapex': {
+    en: 'What you really pay up front after subsidies you typed in.',
+    ro: 'Ce plătești efectiv la început, după subvențiile introduse de tine.'
+  },
+  'results.explainLcoe': {
+    en: 'Average cost per kWh delivered over the analysis horizon (uses effective CAPEX, OPEX, degradation).',
+    ro: 'Cost mediu per kWh livrat pe orizontul de analiză (CAPEX efectiv, OPEX, degradare).'
+  },
+  'results.explainIrr': {
+    en: 'The break‑even “interest rate” of the project: if you could earn that return elsewhere, the project would be a wash. Shown only when the math is meaningful.',
+    ro: 'Rata la care proiectul “se anulează” cu o alternativă similară: dacă ai putea obține același randament altundeva, proiectul n-ar aduce câștig net. Se arată doar când calculul are sens.'
+  },
   'results.explainYear1Savings': { en: 'Net money you keep in year one: value of self-consumed and exported energy minus yearly costs.', ro: 'Bani net în anul 1: valoarea energiei consumate/exportate minus costuri anuale.' },
   'results.explainRoi': { en: 'Over the analysis period, how much you gain compared to what you spent (as a percentage).', ro: 'Pe perioada de analiză, cât câștigi față de ce ai cheltuit (în procente).' },
   'results.explainNpv': { en: "If you value future money at the discount rate you chose, this is the net gain (or loss) in today's money.", ro: 'Dacă actualizezi banii viitori la rata aleasă, acesta e câștigul (sau pierderea) netă în bani de azi.' },
+  'results.explainNpvHorizon': {
+    en: 'NPV is computed over your analysis period and discounted using your discount rate.',
+    ro: 'VAN este calculat pe perioada de analiză și actualizat folosind rata de actualizare.'
+  },
+  'results.npvHorizon': { en: 'Horizon', ro: 'Orizont' },
+  'results.discountRate': { en: 'Discount rate', ro: 'Rată actualizare' },
   'results.explainCumulativeCashflow': { en: 'Starts negative (you paid). Each year adds your savings. When it crosses zero, you have broken even.', ro: 'Începe negativ (ai plătit). Fiecare an adaugă economiile. Când trece de zero, ai recuperat.' },
   'results.explainMonthlyProduction': { en: 'Energy produced each month (kWh). Summer is usually higher than winter.', ro: 'Energie produsă lunar (kWh). Vara e de obicei mai mult decât iarna.' },
+  'results.explainMonthlyChart': {
+    en: 'Bars show modeled monthly kWh from PVGIS for your layout—not readings from a meter on your roof. The main 12‑month curve matches the headline results (after any nearby‑object shading you entered). Extra sections—if enabled—are separate PVGIS runs per calendar year so you can see weather differences between years; they are not “year 1…year N” of your financial table unless you interpret them that way.',
+    ro: 'Barele arată energie lunară modelată în PVGIS pentru configurația ta — nu citiri de la un contor real. Curbă principală pe 12 luni = aceeași bază ca rezultatele principale (după pierderea de umbrire apropiată introdusă de tine). Secțiuni suplimentare — dacă sunt activate — sunt rulări PVGIS separate pe fiecare an calendaristic, ca să vezi diferențe de vreme între ani; nu sunt automat „anul 1…anul N” din analiza financiară decât dacă le interpretezi astfel.'
+  },
+  'results.calendarYearSection': { en: 'Calendar year {year}', ro: 'An calendaristic {year}' },
+  'results.monthlyProfileDbAverage': {
+    en: 'Typical monthly pattern (used for headline figures)',
+    ro: 'Tipar lunar tipic (folosit pentru cifrele principale)'
+  },
+  'results.monthlyByCalendarYear': {
+    en: 'Historical years from PVGIS (weather varies)',
+    ro: 'Ani istorici PVGIS (vremea diferă de la an la an)'
+  },
   'results.explainScenarios': { en: 'Same solar production; we show how payback and profit change if you use more or less yourself, or if the electricity price is different.', ro: 'Aceeași producție solară; arătăm cum se schimbă recuperarea și profitul dacă consumi mai mult/mai puțin sau prețul energiei e diferit.' },
   'results.explainSensitivity': { en: 'Same solar production; we only change electricity price and how much you use yourself. Shows how sensitive your result is to these.', ro: 'Aceeași producție; schimbăm doar prețul energiei și cât consumi tu. Arată cât de sensibil e rezultatul.' },
-  'results.explainMonteCarlo': { en: 'We simulate many possible years using weather uncertainty. You see the range of payback and profit, not just one number.', ro: 'Simulăm mulți ani posibili folosind incertitudinea vremii. Vezi intervalul de recuperare și profit, nu doar un număr.' },
+  'results.explainMonteCarlo': {
+    en: 'Many randomized trials that shake yearly solar output within PVGIS’s typical weather‑year spread and nudge a handful of economic inputs. Histograms summarize how often outcomes fall in each range.',
+    ro: 'Multe simulări aleatoare care modifică producția anuală în limite tipice an‑la‑an din PVGIS și ajustează ușor câteva intrări economice. Histogramele rezumă cât de des rezultatele cad în fiecare interval.'
+  },
   'results.explainBreakEven': { en: "Answers: 'How much could I pay at most?' and 'At what electricity price does this start to pay off?'", ro: "Răspunde: 'Cât pot plăti maxim?' și 'La ce preț al energiei începe să fie profitabil?'" },
   'results.explainP10P50P90': { en: 'We ran many random scenarios: pessimistic (P10), typical (P50), and optimistic (P90) outcomes.', ro: 'Am rulat multe scenarii aleatoare: pesimist (P10), tipic (P50), optimist (P90).' },
   'results.explainKwpOpt': { en: 'For a given cost and consumption, we compare different system sizes and suggest the one that maximizes profit or shortens payback.', ro: 'Pentru un cost și consum dat, comparăm dimensiuni și sugerăm cea care maximizează profitul sau scurtează recuperarea.' },
 
   // Section intros ("In plain words")
   'results.introOverall': { en: 'Below you see what your system produces, what it means for your money, and how results change if assumptions change.', ro: 'Mai jos vezi ce produce sistemul, ce înseamnă pentru buzunarul tău și cum se schimbă rezultatele dacă ipotezele se schimbă.' },
-  'results.introFromSun': { en: 'What your system produces: energy per year and how it varies by month.', ro: 'Ce produce sistemul tău: energie pe an și cum variază pe lună.' },
+  'results.introFromSun': {
+    en: 'What your system is estimated to produce: yearly total and a monthly pattern (PVGIS).',
+    ro: 'Ce ar putea produce sistemul tău, estimat: total anual și un tipar lunar (PVGIS).'
+  },
   'results.introYourMoney': { en: 'What it means for your wallet: when you break even, how much you save, and total return.', ro: 'Ce înseamnă pentru buzunar: când recuperezi, cât economisești și randamentul total.' },
   'results.introScenarios': { en: 'Same solar production; we show how payback and profit change if you use more or less yourself, or if the electricity price is different.', ro: 'Aceeași producție solară; arătăm cum se schimbă recuperarea și profitul dacă consumi mai mult/mai puțin sau prețul energiei e diferit.' },
   'results.introSensitivity': { en: 'How payback and profit change when we vary electricity price and self-consumption (same production).', ro: 'Cum se schimbă recuperarea și profitul când variem prețul energiei și autoconsumul (aceeași producție).' },
-  'results.introMonteCarlo': { en: 'Because weather varies, we ran thousands of possible outcomes. Here you see pessimistic, typical, and optimistic results.', ro: 'Pentru că vremea variază, am rulat mii de rezultate posibile. Aici vezi pesimist, tipic și optimist.' },
+  'results.introMonteCarlo': {
+    en: 'Weather and costs are uncertain. These charts summarize thousands of random scenarios into ranges and histograms.',
+    ro: 'Vremea și costurile nu sunt fixe. Graficele rezumă mii de scenarii aleatoare în intervale și histograme.'
+  },
   'results.introBreakEven': { en: 'Useful limits: maximum system cost for a target payback, and the electricity price above which the system pays off.', ro: 'Limite utile: cost maxim pentru o recuperare țintă și prețul energiei peste care sistemul se amortizează.' },
   'results.introKwpOpt': { en: 'For a given cost and consumption, we compare different system sizes and suggest the one that maximizes profit or shortens payback.', ro: 'Pentru un cost și consum date, comparăm dimensiuni și sugerăm cea care maximizează profitul sau scurtează recuperarea.' },
   'results.introInsights': { en: 'Short notes about your setup and location (e.g. shading, losses, or how good the solar resource is).', ro: 'Note scurte despre configurație și locație (umbrire, pierderi, cât de bună e resursa solară).' },
 
   // Chart one-liners
-  'results.chartMonthlyDesc': { en: 'Energy produced each month (kWh).', ro: 'Energie produsă în fiecare lună (kWh).' },
+  'results.chartMonthlyDesc': {
+    en: 'Estimated kWh per month from PVGIS (not measured at your installation). Enable historical years in advanced PV settings to compare individual calendar years.',
+    ro: 'kWh lunare estimate cu PVGIS (nu sunt măsurători la instalația ta). Activează anii istorici în setările PV avansate pentru a compara ani calendaristici individuali.'
+  },
   'results.chartCashflowDesc': { en: 'Running total: negative at start (you paid), then grows as you save.', ro: 'Total cumulat: negativ la început (ai plătit), apoi crește pe măsură ce economisești.' },
 
   // Wizard hints (under or next to inputs)
@@ -214,16 +406,16 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
     ro: 'Orientarea panourilor este departe de sud; randamentul va fi redus.'
   },
   'insight.highVariability': {
-    en: 'Year-to-year variability of solar resource is relatively high.',
-    ro: 'Variabilitatea resursei solare de la an la an este relativ mare.'
+    en: 'Sunshine differs quite a bit between years at this location—expect wider swings in annual production.',
+    ro: 'Soarele diferă destul de mult între ani la această locație — așteaptă variații mai mari ale producției anuale.'
   },
   'insight.greatSolarResource': {
     en: 'Great solar resource for PV at this location (high specific yield).',
     ro: 'Resursă solară foarte bună pentru PV la această locație (randament specific ridicat).'
   },
-  'insight.areaTypeShading': {
-    en: 'Yield adjusted for urban/suburban shading (buildings/trees).',
-    ro: 'Randament ajustat pentru umbrirea urbană/suburbană (clădiri/copaci).'
+  'insight.nearShadingAssumption': {
+    en: 'Nearby-object shading loss applied as you specified; not inferred from maps.',
+    ro: 'Pierderea de umbrire pentru obiecte apropiate e aplicată cum ai specificat; nu e inferată din hărți.'
   }
 };
 

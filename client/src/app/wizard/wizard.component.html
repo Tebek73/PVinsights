@@ -11,35 +11,12 @@
   </header>
 
   <section class="wizard-body">
-    <!-- Step 1: Area type then location -->
+    <!-- Step 1: Location -->
     <ng-container *ngIf="step() === 1">
       <h3>{{ 'wizard.step1' | translate }}</h3>
-
-      <p class="wizard-body-text">{{ 'wizard.areaTypeQuestion' | translate }}</p>
-      <div class="wizard-area-type">
-        <label>
-          <select
-            [ngModel]="area_type()"
-            (ngModelChange)="area_type.set($event || null)"
-          >
-            <option value="">{{ 'wizard.areaTypePlaceholder' | translate }}</option>
-            <option value="rural">{{ 'wizard.areaTypeRural' | translate }}</option>
-            <option value="suburban">{{ 'wizard.areaTypeSuburban' | translate }}</option>
-            <option value="urban">{{ 'wizard.areaTypeUrban' | translate }}</option>
-          </select>
-        </label>
-      </div>
-
-      <div
-        class="wizard-location-block"
-        [class.wizard-location-visible]="area_type() !== null"
-      >
-        <p class="wizard-body-text">{{ 'wizard.location.hint' | translate }}</p>
-        <app-location-picker
-          [lat]="lat()"
-          [lon]="lon()"
-          (latLonChange)="onLatLonChange($event)"
-        />
+      <p class="wizard-body-text">{{ 'wizard.location.hint' | translate }}</p>
+      <div class="wizard-location-block">
+        <app-location-picker [lat]="lat()" [lon]="lon()" (latLonChange)="onLatLonChange($event)" />
       </div>
     </ng-container>
 
@@ -51,46 +28,40 @@
       <div class="wizard-grid">
         <label>
           {{ 'wizard.systemSize' | translate }}
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            [ngModel]="peakpower_kw()"
-            (ngModelChange)="peakpower_kw.set($event)"
-          />
+          <input type="number" min="0" step="0.1" [ngModel]="peakpower_kw()" (ngModelChange)="peakpower_kw.set($event)" />
           <span class="wizard-hint">{{ 'wizard.hintSystemSize' | translate }}</span>
         </label>
 
         <label>
           {{ 'wizard.systemLosses' | translate }}
-          <input
-            type="number"
-            min="0"
-            max="80"
-            step="1"
-            [ngModel]="loss_percent()"
-            (ngModelChange)="loss_percent.set($event)"
-          />
+          <input type="number" min="0" max="80" step="1" [ngModel]="loss_percent()" (ngModelChange)="loss_percent.set($event)" />
           <span class="wizard-hint">{{ 'wizard.hintSystemLosses' | translate }}</span>
         </label>
       </div>
 
       <div class="wizard-grid">
-        <label class="checkbox">
+        <label>
+          {{ 'wizard.nearShadingLoss' | translate }}
           <input
-            type="checkbox"
-            [ngModel]="usehorizon()"
-            (ngModelChange)="usehorizon.set($event)"
+            type="number"
+            min="0"
+            max="80"
+            step="1"
+            [ngModel]="near_shading_loss_percent()"
+            (ngModelChange)="near_shading_loss_percent.set($event)"
           />
+          <span class="wizard-hint">{{ 'wizard.hintNearShading' | translate }}</span>
+        </label>
+      </div>
+
+      <div class="wizard-grid">
+        <label class="checkbox">
+          <input type="checkbox" [ngModel]="usehorizon()" (ngModelChange)="usehorizon.set($event)" />
           {{ 'wizard.useHorizon' | translate }}
         </label>
 
         <label class="checkbox">
-          <input
-            type="checkbox"
-            [ngModel]="optimalangles()"
-            (ngModelChange)="optimalangles.set($event)"
-          />
+          <input type="checkbox" [ngModel]="optimalangles()" (ngModelChange)="optimalangles.set($event)" />
           {{ 'wizard.optimalAngles' | translate }}
         </label>
       </div>
@@ -101,34 +72,17 @@
         <div class="wizard-grid wizard-grid-3">
           <label>
             {{ 'wizard.tiltAngle' | translate }}
-            <input
-              type="number"
-              min="0"
-              max="90"
-              [disabled]="optimalangles()"
-              [ngModel]="angle_deg()"
-              (ngModelChange)="angle_deg.set($event)"
-            />
+            <input type="number" min="0" max="90" [disabled]="optimalangles()" [ngModel]="angle_deg()" (ngModelChange)="angle_deg.set($event)" />
           </label>
 
           <label>
             {{ 'wizard.azimuth' | translate }}
-            <input
-              type="number"
-              min="-180"
-              max="180"
-              [disabled]="optimalangles()"
-              [ngModel]="aspect_deg()"
-              (ngModelChange)="aspect_deg.set($event)"
-            />
+            <input type="number" min="-180" max="180" [disabled]="optimalangles()" [ngModel]="aspect_deg()" (ngModelChange)="aspect_deg.set($event)" />
           </label>
 
           <label>
             {{ 'wizard.pvTech' | translate }}
-            <select
-              [ngModel]="pvtechchoice()"
-              (ngModelChange)="pvtechchoice.set($event)"
-            >
+            <select [ngModel]="pvtechchoice()" (ngModelChange)="pvtechchoice.set($event)">
               <option value="crystSi">{{ 'pvTech.crystSi' | translate }}</option>
               <option value="crystSi2025">{{ 'pvTech.crystSi2025' | translate }}</option>
               <option value="CIS">{{ 'pvTech.CIS' | translate }}</option>
@@ -141,10 +95,7 @@
         <div class="wizard-grid">
           <label>
             {{ 'wizard.mounting' | translate }}
-            <select
-              [ngModel]="mountingplace()"
-              (ngModelChange)="mountingplace.set($event)"
-            >
+            <select [ngModel]="mountingplace()" (ngModelChange)="mountingplace.set($event)">
               <option value="free">{{ 'wizard.mountingFree' | translate }}</option>
               <option value="building">{{ 'wizard.mountingBuilding' | translate }}</option>
             </select>
@@ -152,12 +103,22 @@
 
           <label>
             {{ 'wizard.radDatabase' | translate }}
+            <input type="text" [placeholder]="'wizard.radPlaceholder' | translate" [ngModel]="raddatabase()" (ngModelChange)="raddatabase.set($event || null)" />
+          </label>
+        </div>
+
+        <div class="wizard-grid">
+          <label>
+            {{ 'wizard.monthlyHistoryYears' | translate }}
             <input
-              type="text"
-              [placeholder]="'wizard.radPlaceholder' | translate"
-              [ngModel]="raddatabase()"
-              (ngModelChange)="raddatabase.set($event || null)"
+              type="number"
+              min="0"
+              max="20"
+              step="1"
+              [ngModel]="monthly_history_years()"
+              (ngModelChange)="onMonthlyHistoryYearsChange($event)"
             />
+            <span class="wizard-hint">{{ 'wizard.hintMonthlyHistoryYears' | translate }}</span>
           </label>
         </div>
       </details>
@@ -170,26 +131,23 @@
 
       <div class="wizard-grid">
         <label>
-          {{ 'wizard.capex' | translate }}
-          <input
-            type="number"
-            min="0"
-            step="100"
-            [ngModel]="capex()"
-            (ngModelChange)="capex.set($event)"
-          />
+          {{ 'wizard.currency' | translate }}
+          <select [ngModel]="currency()" (ngModelChange)="currency.set($event)">
+            <option value="EUR">EUR</option>
+            <option value="RON">RON</option>
+          </select>
+          <span class="wizard-hint">{{ 'wizard.hintCurrency' | translate }}</span>
+        </label>
+
+        <label>
+          {{ 'wizard.capex' | translate }} ({{ currency() }})
+          <input type="number" min="0" step="100" [ngModel]="capex()" (ngModelChange)="capex.set($event)" />
           <span class="wizard-hint">{{ 'wizard.hintCapex' | translate }}</span>
         </label>
 
         <label>
-          {{ 'wizard.priceBuy' | translate }}
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            [ngModel]="price_buy()"
-            (ngModelChange)="price_buy.set($event)"
-          />
+          {{ 'wizard.priceBuy' | translate }} ({{ currency() }}/kWh)
+          <input type="number" min="0" step="0.01" [ngModel]="price_buy()" (ngModelChange)="price_buy.set($event)" />
           <span class="wizard-hint">{{ 'wizard.hintPriceBuy' | translate }}</span>
         </label>
       </div>
@@ -209,14 +167,8 @@
         </label>
 
         <label>
-          {{ 'wizard.priceSell' | translate }}
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            [ngModel]="price_sell()"
-            (ngModelChange)="price_sell.set($event)"
-          />
+          {{ 'wizard.priceSell' | translate }} ({{ currency() }}/kWh)
+          <input type="number" min="0" step="0.01" [ngModel]="price_sell()" (ngModelChange)="price_sell.set($event)" />
         </label>
       </div>
 
@@ -225,15 +177,56 @@
 
         <div class="wizard-grid wizard-grid-3">
           <label>
-            {{ 'wizard.opex' | translate }}
+            {{ 'wizard.opex' | translate }} ({{ currency() }}/year)
+            <input type="number" min="0" step="50" [ngModel]="opex_yearly()" (ngModelChange)="opex_yearly.set($event)" />
+            <span class="wizard-hint">{{ 'wizard.hintOpex' | translate }}</span>
+          </label>
+
+          <label>
+            {{ 'wizard.opexEscalation' | translate }}
             <input
               type="number"
               min="0"
-              step="50"
-              [ngModel]="opex_yearly()"
-              (ngModelChange)="opex_yearly.set($event)"
+              max="10"
+              step="0.5"
+              [ngModel]="opex_escalation() * 100"
+              (ngModelChange)="opex_escalation.set(($event ?? 0) / 100)"
             />
-            <span class="wizard-hint">{{ 'wizard.hintOpex' | translate }}</span>
+            <span class="wizard-hint">{{ 'wizard.hintOpexEscalation' | translate }}</span>
+          </label>
+
+          <label>
+            {{ 'wizard.priceSellEscalation' | translate }}
+            <input
+              type="number"
+              min="0"
+              max="10"
+              step="0.5"
+              [ngModel]="price_sell_escalation() * 100"
+              (ngModelChange)="price_sell_escalation.set(($event ?? 0) / 100)"
+            />
+            <span class="wizard-hint">{{ 'wizard.hintPriceSellEscalation' | translate }}</span>
+          </label>
+        </div>
+
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            {{ 'wizard.subsidyAmount' | translate }} ({{ currency() }})
+            <input type="number" min="0" step="100" [ngModel]="subsidy_amount()" (ngModelChange)="subsidy_amount.set($event)" />
+            <span class="wizard-hint">{{ 'wizard.hintSubsidyAmount' | translate }}</span>
+          </label>
+
+          <label>
+            {{ 'wizard.subsidyPercentCapex' | translate }}
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              [ngModel]="subsidy_percent_capex() * 100"
+              (ngModelChange)="subsidy_percent_capex.set(($event ?? 0) / 100)"
+            />
+            <span class="wizard-hint">{{ 'wizard.hintSubsidyPercent' | translate }}</span>
           </label>
 
           <label>
@@ -248,22 +241,15 @@
             />
             <span class="wizard-hint">{{ 'wizard.hintDegradation' | translate }}</span>
           </label>
-
-          <label>
-            {{ 'wizard.analysisYears' | translate }}
-            <input
-              type="number"
-              min="1"
-              max="40"
-              step="1"
-              [ngModel]="analysis_years()"
-              (ngModelChange)="analysis_years.set($event)"
-            />
-            <span class="wizard-hint">{{ 'wizard.hintAnalysisYears' | translate }}</span>
-          </label>
         </div>
 
-        <div class="wizard-grid">
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            {{ 'wizard.analysisYears' | translate }}
+            <input type="number" min="1" max="40" step="1" [ngModel]="analysis_years()" (ngModelChange)="analysis_years.set($event)" />
+            <span class="wizard-hint">{{ 'wizard.hintAnalysisYears' | translate }}</span>
+          </label>
+
           <label>
             {{ 'wizard.discountRate' | translate }}
             <input
@@ -292,44 +278,112 @@
           </label>
         </div>
       </details>
+
+      <details class="wizard-advanced wizard-optional-block">
+        <summary>{{ 'wizard.optionalConsumptionKwp' | translate }}</summary>
+        <p class="wizard-body-text">{{ 'wizard.optionalConsumptionKwpHint' | translate }}</p>
+
+        <div class="wizard-grid">
+          <label>
+            {{ 'wizard.consumptionAnnualKwh' | translate }}
+            <input type="number" min="0" step="100" [ngModel]="consumption_annual_kwh()" (ngModelChange)="consumption_annual_kwh.set($event)" />
+          </label>
+
+          <label>
+            {{ 'wizard.consumptionDaytimePct' | translate }}
+            <input type="number" min="0" max="100" step="5" [ngModel]="consumption_daytime_pct()" (ngModelChange)="consumption_daytime_pct.set($event)" />
+          </label>
+        </div>
+
+        <label class="wizard-full-width">
+          {{ 'wizard.monthlyLoadProfile' | translate }}
+          <textarea
+            rows="2"
+            [placeholder]="'wizard.monthlyLoadProfilePlaceholder' | translate"
+            [ngModel]="monthly_profile_text()"
+            (ngModelChange)="monthly_profile_text.set($event)"
+          ></textarea>
+          <span class="wizard-hint">{{ 'wizard.hintMonthlyLoadProfile' | translate }}</span>
+        </label>
+
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            {{ 'wizard.costModelFixed' | translate }} ({{ currency() }})
+            <input type="number" min="0" step="100" [ngModel]="cost_fixed()" (ngModelChange)="cost_fixed.set($event)" />
+          </label>
+
+          <label>
+            {{ 'wizard.costModelPerKwp' | translate }} ({{ currency() }}/kWp)
+            <input type="number" min="0" step="50" [ngModel]="cost_per_kwp()" (ngModelChange)="cost_per_kwp.set($event)" />
+          </label>
+        </div>
+
+        <div class="wizard-grid wizard-grid-3">
+          <label>
+            {{ 'wizard.kwpSearchMin' | translate }}
+            <input type="number" min="0.1" step="0.5" [ngModel]="kwp_min()" (ngModelChange)="kwp_min.set($event)" />
+          </label>
+
+          <label>
+            {{ 'wizard.kwpSearchMax' | translate }}
+            <input type="number" min="0.1" step="0.5" [ngModel]="kwp_max()" (ngModelChange)="kwp_max.set($event)" />
+          </label>
+
+          <label>
+            {{ 'wizard.kwpSearchStep' | translate }}
+            <input type="number" min="0.1" step="0.1" [ngModel]="kwp_step()" (ngModelChange)="kwp_step.set($event)" />
+          </label>
+        </div>
+      </details>
+
+      <details class="wizard-advanced wizard-optional-block">
+        <summary>{{ 'wizard.optionalMonteCarlo' | translate }}</summary>
+        <p class="wizard-body-text">{{ 'wizard.optionalMonteCarloHint' | translate }}</p>
+
+        <label class="checkbox">
+          <input type="checkbox" [ngModel]="monte_carlo_enabled()" (ngModelChange)="monte_carlo_enabled.set($event)" />
+          {{ 'wizard.runMonteCarlo' | translate }}
+        </label>
+
+        <div class="wizard-grid">
+          <label>
+            {{ 'wizard.monteCarloTrials' | translate }}
+            <input type="number" min="100" max="20000" step="100" [ngModel]="monte_carlo_trials()" (ngModelChange)="monte_carlo_trials.set($event)" />
+          </label>
+
+          <label>
+            {{ 'wizard.monteCarloTargetPayback' | translate }}
+            <input
+              type="number"
+              min="1"
+              max="40"
+              step="1"
+              [ngModel]="monte_carlo_target_payback()"
+              (ngModelChange)="onMcTargetPaybackChange($event)"
+            />
+          </label>
+        </div>
+      </details>
     </ng-container>
   </section>
 
   <footer class="wizard-footer">
     <div class="wizard-footer-left">
-      <button
-        type="button"
-        class="wizard-nav-button"
-        [disabled]="step() === 1 || store.isLoading()"
-        (click)="prevStep()"
-      >
+      <button type="button" class="wizard-nav-button" [disabled]="step() === 1 || store.isLoading()" (click)="prevStep()">
         {{ 'wizard.back' | translate }}
       </button>
 
-      <button
-        type="button"
-        class="wizard-nav-button"
-        *ngIf="step() < 3"
-        [disabled]="!canGoNext() || store.isLoading()"
-        (click)="nextStep()"
-      >
+      <button type="button" class="wizard-nav-button" *ngIf="step() < 3" [disabled]="!canGoNext() || store.isLoading()" (click)="nextStep()">
         {{ 'wizard.next' | translate }}
       </button>
 
-      <button
-        type="button"
-        class="wizard-submit-button"
-        *ngIf="step() === 3"
-        [disabled]="store.isLoading()"
-        (click)="submit()"
-      >
+      <button type="button" class="wizard-submit-button" *ngIf="step() === 3" [disabled]="store.isLoading()" (click)="submit()">
         <span *ngIf="!store.isLoading()">{{ 'wizard.runSimulation' | translate }}</span>
         <span *ngIf="store.isLoading()">{{ 'wizard.running' | translate }}</span>
       </button>
     </div>
   </footer>
 
-  <!-- Error pop-up -->
   @if (store.errorMessage()) {
     <div class="wizard-error-overlay" (click)="closeError()" role="dialog" aria-modal="true" aria-labelledby="error-dialog-title">
       <div class="wizard-error-dialog" (click)="$event.stopPropagation()">
@@ -342,4 +396,3 @@
     </div>
   }
 </div>
-

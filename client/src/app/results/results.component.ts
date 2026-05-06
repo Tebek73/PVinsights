@@ -5,50 +5,123 @@ import { SimulationStoreService } from '../simulation-store.service';
 import { TranslatePipe } from '../translate.pipe';
 import { LanguageService } from '../language.service';
 import { InfoTooltipComponent } from '../shared/info-tooltip/info-tooltip.component';
+import type { HorizonSource } from '../simulate.service';
+import { FeasibilityGaugeComponent } from './feasibility-gauge/feasibility-gauge.component';
 
 /** Fallback: map backend English text to translation key when API doesn't send key */
 const INSIGHT_TEXT_TO_KEY: Record<string, string> = {
   'High system losses; check inverter sizing, cabling, and shading.': 'insight.highLosses',
   'Array orientation is far from south; expect reduced energy yield.': 'insight.orientationFarFromSouth',
-  'Year-to-year variability of solar resource is relatively high.': 'insight.highVariability',
+  'Year-to-year variability of solar resource is relatively high (PVGIS SD_y).': 'insight.highVariability',
+  'Year-to-year variability of solar resource is relatively high at this location.': 'insight.highVariability',
   'Great solar resource for PV at this location (high specific yield).': 'insight.greatSolarResource'
 };
-// Backend may send "Yield adjusted for urban/suburban shading (buildings/trees)." with key insight.areaTypeShading
 
 @Component({
   standalone: true,
   selector: 'app-results',
-  imports: [CommonModule, TranslatePipe, InfoTooltipComponent],
+  imports: [CommonModule, TranslatePipe, InfoTooltipComponent, FeasibilityGaugeComponent],
   templateUrl: './results.component.html',
   styleUrl: './results.component.scss'
 })
 export class ResultsComponent {
   readonly monthlyEnergy = signal<{ month: number; kwh: number }[]>([]);
   readonly maxMonthlyEnergy = signal<number>(1);
+  readonly monthlyEnergyByYear = signal<{ calendar_year: number; months: { month: number; kwh: number }[] }[]>([]);
 
   readonly cashflow = signal<{ year: number; value: number }[]>([]);
   readonly minCashflow = signal<number>(0);
   readonly maxCashflow = signal<number>(1);
   readonly Math = Math;
 
-  /** For 1D sensitivity: points for SVG (x 0..1, y 0..1 normalized). */
-  sensitivity1DPoints(
-    sens: NonNullable<NonNullable<import('../simulate.service').SimulateResponse['sensitivity']>['one_d']>
-  ): { payback: string; npv: string } {
-    const n = sens.values.length;
-    if (n === 0) return { payback: '', npv: '' };
-    const paybackNums = sens.payback_years.map((p) => (p != null ? p : 0));
-    const npvNums = sens.npv.map((v) => (v != null ? v : 0));
-    const minP = Math.min(...paybackNums);
-    const maxP = Math.max(...paybackNums);
-    const minN = Math.min(...npvNums);
-    const maxN = Math.max(...npvNums);
-    const rangeP = maxP - minP || 1;
-    const rangeN = maxN - minN || 1;
-    const x = (i: number) => (i / (n - 1)) * 100;
-    const paybackPath = paybackNums.map((p, i) => `${x(i)},${100 - ((p - minP) / rangeP) * 100}`).join(' ');
-    const npvPath = npvNums.map((v, i) => `${x(i)},${100 - ((v - minN) / rangeN) * 100}`).join(' ');
-    return { payback: paybackPath, npv: npvPath };
+  currencyCode(): 'EUR' | 'RON' {
+    const res = this.store.lastResponse();
+    const fromRes = res?.meta?.currency;
+    if (fromRes === 'EUR' || fromRes === 'RON') return fromRes;
+    const fromReq = this.store.lastRequest()?.economics?.currency;
+    if (fromReq === 'EUR' || fromReq === 'RON') return fromReq;
+    return 'EUR';
+  }
+
+  currencySymbol(): string {
+    return this.currencyCode() === 'RON' ? 'lei' : '€';
+  }
+
+  priceUnit(): string {
+    return `${this.currencyCode()}/kWh`;
+  }
+
+  formatPrice(v: number): string {
+    return `${v.toFixed(3)} ${this.priceUnit()}`;
+  }
+
+  formatMoney(v: number): string {
+    const rounded = Math.round(v);
+    // Locale: use UI language for separators; currency unit comes from currency selector.
+    const txt = new Intl.NumberFormat(this.lang.currentLang() === 'ro' ? 'ro-RO' : 'en-GB', {
+      maximumFractionDigits: 0
+    }).format(rounded);
+    return `${txt} ${this.currencySymbol()}`;
+  }
+
+  /** Compact NPV axis labels (Monte Carlo histogram bins). */
+  formatMoneyCompactAxis(v: number): string {
+    const rounded = Math.round(v);
+    const locale = this.lang.currentLang() === 'ro' ? 'ro-RO' : 'en-GB';
+    const txt = new Intl.NumberFormat(locale, {
+      notation: 'compact',
+      maximumFractionDigits: 1
+    }).format(rounded);
+    return `${txt} ${this.currencySymbol()}`;
+  }
+
+  /** Compact amount only (no currency), for interval notation like (−5k; −4k) €. */
+  formatMoneyCompactAmountOnly(v: number): string {
+    const rounded = Math.round(v);
+    const locale = this.lang.currentLang() === 'ro' ? 'ro-RO' : 'en-GB';
+    return new Intl.NumberFormat(locale, {
+      notation: 'compact',
+      maximumFractionDigits: 1
+    }).format(rounded);
+  }
+
+  paybackBinLabel(edges: number[], i: number): string {
+    const lo = edges[i];
+    const hi = edges[i + 1];
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return '';
+    const fmt = (x: number) => {
+      const s = x.toFixed(1);
+      return s.endsWith('.0') ? s.slice(0, -2) : s;
+    };
+    return `${fmt(lo)}–${fmt(hi)}`;
+  }
+
+  npvBinLabel(edges: number[], i: number): string {
+    const lo = edges[i];
+    const hi = edges[i + 1];
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) return '';
+    const a = Math.min(lo, hi);
+    const b = Math.max(lo, hi);
+    const sym = this.currencySymbol();
+    return `(${this.formatMoneyCompactAmountOnly(a)}; ${this.formatMoneyCompactAmountOnly(b)}) ${sym}`;
+  }
+
+  monteCarloNpvHistogramBarTitle(
+    edges: number[],
+    i: number,
+    count: number,
+    totalCount: number,
+    clippedGlobal: boolean
+  ): string {
+    const interval = this.npvBinLabel(edges, i);
+    const pct = totalCount ? this.percent(count, totalCount).toFixed(1) : '0';
+    let s = `${interval} • ${count.toFixed(0)} (${pct}%)`;
+    if (clippedGlobal) s += ` • ${this.lang.translate('results.outliersClipped')}`;
+    return s;
+  }
+
+  mcHistogramPlotMinWidth(binCount: number): number {
+    return Math.max(binCount * 28, 280);
   }
 
   /** Heatmap color 0..1 for value between min and max (null -> gray). */
@@ -78,6 +151,21 @@ export class ResultsComponent {
     return counts.reduce((a, b) => a + b, 0);
   }
 
+  percent(count: number, total: number): number {
+    if (!total) return 0;
+    return (count / total) * 100;
+  }
+
+  npvZeroMarkerPct(edges: number[]): number | null {
+    if (!edges || edges.length < 2) return null;
+    const min = edges[0];
+    const max = edges[edges.length - 1];
+    const r = max - min;
+    if (!Number.isFinite(min) || !Number.isFinite(max) || r <= 0) return null;
+    if (0 < min || 0 > max) return null;
+    return ((0 - min) / r) * 100;
+  }
+
   /** Min/max of 2D grid for color scale (excluding nulls). */
   gridMinMax(grid: (number | null)[][]): { min: number; max: number } {
     let min = Infinity;
@@ -102,6 +190,7 @@ export class ResultsComponent {
       const res = this.store.lastResponse();
       if (!res) {
         this.monthlyEnergy.set([]);
+        this.monthlyEnergyByYear.set([]);
         this.maxMonthlyEnergy.set(1);
         this.cashflow.set([]);
         this.minCashflow.set(0);
@@ -111,9 +200,21 @@ export class ResultsComponent {
 
       const monthly = res.charts.monthly_energy_kwh;
       this.monthlyEnergy.set(monthly);
-      const maxMonthly =
-        monthly.length > 0 ? Math.max(...monthly.map((m) => m.kwh)) : 1;
-      this.maxMonthlyEnergy.set(maxMonthly || 1);
+
+      const byYear = res.charts.monthly_energy_by_year;
+      if (byYear && byYear.length > 0) {
+        this.monthlyEnergyByYear.set(byYear);
+        let maxAll = monthly.length > 0 ? Math.max(...monthly.map((m) => m.kwh)) : 1;
+        for (const block of byYear) {
+          for (const m of block.months) maxAll = Math.max(maxAll, m.kwh);
+        }
+        this.maxMonthlyEnergy.set(maxAll || 1);
+      } else {
+        this.monthlyEnergyByYear.set([]);
+        const maxMonthly =
+          monthly.length > 0 ? Math.max(...monthly.map((m) => m.kwh)) : 1;
+        this.maxMonthlyEnergy.set(maxMonthly || 1);
+      }
 
       const cashflowPoints = res.charts.cashflow_cumulative;
       this.cashflow.set(cashflowPoints);
@@ -130,6 +231,23 @@ export class ResultsComponent {
 
   backToWizard(): void {
     this.router.navigate(['/']);
+  }
+
+  calendarYearHeading(year: number): string {
+    return this.lang.translate('results.calendarYearSection').replace(/\{year\}/g, String(year));
+  }
+
+  horizonSourceLabel(source: HorizonSource): string {
+    const keys: Record<HorizonSource, string> = {
+      pvgis_printhorizon: 'results.horizonSourcePrinthorizon',
+      pvgis_internal: 'results.horizonSourceInternal',
+      disabled_flat: 'results.horizonSourceDisabled'
+    };
+    return this.lang.translate(keys[source] ?? source);
+  }
+
+  simplePaybackYears(res: { finance: { simple_payback_years: number | null; payback_years: number | null } }): number | null {
+    return res.finance.simple_payback_years ?? res.finance.payback_years;
   }
 
   /** Returns translated insight text (uses key from API or fallback map from English text). */

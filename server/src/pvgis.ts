@@ -114,14 +114,15 @@ const HORIZON_COUNT = 48;
 /**
  * Get DEM-calculated horizon profile for a point (terrain shading).
  * Returns 48 elevation angles in degrees, starting at North and moving clockwise.
- * On parse error or missing data returns all zeros so caller can still run PVcalc without horizon.
+ * Returns null if the API call fails or data is unusable — caller should omit `userhorizon`
+ * and let PVcalc use internal terrain horizon when usehorizon=1.
  */
-export async function getHorizonProfile(lat: number, lon: number): Promise<number[]> {
+export async function getHorizonProfile(lat: number, lon: number): Promise<number[] | null> {
     try {
         const data = await callPVGIS('printhorizon', { lat, lon });
         const profile = data?.outputs?.horizon_profile;
         if (!Array.isArray(profile) || profile.length === 0) {
-            return Array(HORIZON_COUNT).fill(0);
+            return null;
         }
         const heights = profile.map((p: { H_hor?: number }) => {
             const h = p?.H_hor;
@@ -134,7 +135,7 @@ export async function getHorizonProfile(lat: number, lon: number): Promise<numbe
         while (out.length < HORIZON_COUNT) out.push(0);
         return out;
     } catch (err) {
-        console.warn('getHorizonProfile failed, using flat horizon:', err);
-        return Array(HORIZON_COUNT).fill(0);
+        console.warn('getHorizonProfile failed:', err);
+        return null;
     }
 }

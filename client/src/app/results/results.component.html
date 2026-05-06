@@ -1,11 +1,41 @@
 <div class="results">
-  <header class="results-header">
-    <h2>{{ 'results.title' | translate }}</h2>
-    <p>{{ 'results.subtitle' | translate }}</p>
-    <p class="results-intro-overall">{{ 'results.introOverall' | translate }}</p>
-  </header>
-
   <ng-container *ngIf="store.lastResponse() as res; else emptyState">
+    <header class="results-header results-header-with-gauge">
+      <div class="results-header-main">
+        <h2>{{ 'results.title' | translate }}</h2>
+        <p>{{ 'results.subtitle' | translate }}</p>
+        <p class="results-intro-overall">{{ 'results.introOverall' | translate }}</p>
+      </div>
+      <app-feasibility-gauge [feasibility]="res.feasibility_score" />
+    </header>
+
+    <section class="results-energy-basis">
+      <h3 class="section-title-row">{{ 'results.pvgisEnergyTitle' | translate }}<app-info-tooltip explanationKey="results.explainPvgisEnergyBasis" /></h3>
+      <div class="energy-basis-grid">
+        <ng-container *ngIf="res.pvgis.meta.near_shading_loss_percent > 0; else annualSingle">
+          <div class="energy-basis-card">
+            <h4>{{ 'results.rawAnnualKwh' | translate }}</h4>
+            <p class="energy-basis-value">{{ res.pvgis.raw.totals.E_y | number: '1.0-0' }} {{ 'results.unitKwhYear' | translate }}</p>
+          </div>
+          <div class="energy-basis-card">
+            <h4>{{ 'results.adjustedAnnualKwh' | translate }}</h4>
+            <p class="energy-basis-value">{{ res.pvgis.adjusted.totals.E_y | number: '1.0-0' }} {{ 'results.unitKwhYear' | translate }}</p>
+          </div>
+        </ng-container>
+        <ng-template #annualSingle>
+          <div class="energy-basis-card">
+            <h4>{{ 'results.annualKwhPvgisEstimate' | translate }}</h4>
+            <p class="energy-basis-value">{{ res.pvgis.adjusted.totals.E_y | number: '1.0-0' }} {{ 'results.unitKwhYear' | translate }}</p>
+          </div>
+        </ng-template>
+      </div>
+      <p class="results-meta-line">{{ 'results.horizonSourceLabel' | translate }}: {{ horizonSourceLabel(res.pvgis.meta.horizon_source) }}</p>
+      <p class="results-meta-line" *ngIf="res.pvgis.meta.horizon_warning">{{ res.pvgis.meta.horizon_warning }}</p>
+      <p class="results-meta-line" *ngIf="res.pvgis.meta.near_shading_loss_percent > 0">
+        {{ 'results.nearShadingApplied' | translate }}: {{ res.pvgis.meta.near_shading_loss_percent | number: '1.0-1' }}%
+      </p>
+    </section>
+
     <section class="results-kpis">
       <p class="results-block-intro">{{ 'results.introFromSun' | translate }}</p>
       <div class="kpi-card">
@@ -27,19 +57,57 @@
 
       <p class="results-block-intro results-block-intro-money">{{ 'results.introYourMoney' | translate }}</p>
       <div class="kpi-card">
-        <h3 class="kpi-title-row">{{ 'results.paybackPlain' | translate }}<app-info-tooltip explanationKey="results.explainPayback" /></h3>
+        <h3 class="kpi-title-row">{{ 'results.simplePaybackPlain' | translate }}<app-info-tooltip explanationKey="results.explainSimplePayback" /></h3>
         <p class="kpi-value">
-          <ng-container *ngIf="res.finance.payback_years !== null; else noPayback">
-            {{ res.finance.payback_years }} {{ 'results.years' | translate }}
+          <ng-container *ngIf="simplePaybackYears(res) !== null; else noPaybackSimple">
+            {{ simplePaybackYears(res)! | number: '1.1-1' }} {{ 'results.years' | translate }}
           </ng-container>
-          <ng-template #noPayback>n/a</ng-template>
+          <ng-template #noPaybackSimple>n/a</ng-template>
         </p>
+      </div>
+
+      <div class="kpi-card">
+        <h3 class="kpi-title-row">{{ 'results.discountedPaybackPlain' | translate }}<app-info-tooltip explanationKey="results.explainDiscountedPayback" /></h3>
+        <p class="kpi-value">
+          <ng-container *ngIf="res.finance.discounted_payback_years !== null; else noPaybackDisc">
+            {{ res.finance.discounted_payback_years | number: '1.1-1' }} {{ 'results.years' | translate }}
+          </ng-container>
+          <ng-template #noPaybackDisc>n/a</ng-template>
+        </p>
+      </div>
+
+      <div class="kpi-card">
+        <h3 class="kpi-title-row">{{ 'results.effectiveCapexPlain' | translate }}<app-info-tooltip explanationKey="results.explainEffectiveCapex" /></h3>
+        <p class="kpi-value">{{ formatMoney(res.finance.effective_capex) }}</p>
+      </div>
+
+      <div class="kpi-card">
+        <h3 class="kpi-title-row">{{ 'results.lcoePlain' | translate }}<app-info-tooltip explanationKey="results.explainLcoe" /></h3>
+        <p class="kpi-value">
+          <ng-container *ngIf="res.finance.lcoe_currency_per_kwh !== null; else noLcoe">
+            {{ formatPrice(res.finance.lcoe_currency_per_kwh!) }}
+          </ng-container>
+          <ng-template #noLcoe>n/a</ng-template>
+        </p>
+      </div>
+
+      <div class="kpi-card">
+        <h3 class="kpi-title-row">{{ 'results.irrPlain' | translate }}<app-info-tooltip explanationKey="results.explainIrr" /></h3>
+        <p class="kpi-value">
+          <ng-container *ngIf="res.finance.irr !== null; else irrReasonBlock">
+            {{ (res.finance.irr * 100) | number: '1.1-1' }} %
+          </ng-container>
+          <ng-template #irrReasonBlock>
+            <span>n/a</span>
+          </ng-template>
+        </p>
+        <p class="kpi-sub" *ngIf="res.finance.irr === null && res.finance.irr_reason">{{ res.finance.irr_reason }}</p>
       </div>
 
       <div class="kpi-card">
         <h3 class="kpi-title-row">{{ 'results.year1SavingsPlain' | translate }}<app-info-tooltip explanationKey="results.explainYear1Savings" /></h3>
         <p class="kpi-value">
-          {{ res.finance.savings_year1 | number: '1.0-0' }}
+          {{ formatMoney(res.finance.savings_year1) }}
         </p>
       </div>
 
@@ -52,29 +120,70 @@
           <ng-template #noRoi>n/a</ng-template>
         </p>
       </div>
+
+      <div class="kpi-card">
+        <h3 class="kpi-title-row">{{ 'results.npvPlain' | translate }}<app-info-tooltip explanationKey="results.explainNpvHorizon" /></h3>
+        <p class="kpi-value">
+          <ng-container *ngIf="res.finance.npv !== null; else noNpv">
+            {{ formatMoney(res.finance.npv) }}
+          </ng-container>
+          <ng-template #noNpv>n/a</ng-template>
+        </p>
+        <p class="kpi-sub">
+          {{ 'results.npvHorizon' | translate }}: {{ store.lastRequest()?.economics?.analysis_years }} {{ 'results.years' | translate }},
+          {{ 'results.discountRate' | translate }}: {{ (store.lastRequest()?.economics?.discount_rate ?? 0) * 100 | number: '1.0-1' }}%
+        </p>
+      </div>
     </section>
 
     <section class="results-charts">
       <div class="chart-card">
-        <h3>{{ 'results.monthlyProduction' | translate }}</h3>
+        <h3 class="chart-title-row">
+          {{ 'results.monthlyProduction' | translate }}
+          <app-info-tooltip explanationKey="results.explainMonthlyChart" />
+        </h3>
         <p class="chart-desc">{{ 'results.chartMonthlyDesc' | translate }}</p>
-        <div class="chart-bars" *ngIf="monthlyEnergy().length > 0">
-          <div
-            class="chart-bar-row"
-            *ngFor="let m of monthlyEnergy()"
-          >
-            <span class="chart-bar-label">M{{ m.month }}</span>
-            <div class="chart-bar-track">
-              <div
-                class="chart-bar-fill"
-                [style.width.%]="(m.kwh / maxMonthlyEnergy()) * 100"
-              ></div>
+
+        <ng-container *ngIf="monthlyEnergyByYear().length > 0; else monthlySingleColumn">
+          <p class="chart-subheading">{{ 'results.monthlyProfileDbAverage' | translate }}</p>
+          <div class="chart-bars chart-bars-profile" *ngIf="monthlyEnergy().length > 0">
+            <div class="chart-bar-row" *ngFor="let m of monthlyEnergy()">
+              <span class="chart-bar-label">M{{ m.month }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill" [style.width.%]="(m.kwh / maxMonthlyEnergy()) * 100"></div>
+              </div>
+              <span class="chart-bar-value">{{ m.kwh | number: '1.0-0' }}</span>
             </div>
-            <span class="chart-bar-value">
-              {{ m.kwh | number: '1.0-0' }}
-            </span>
           </div>
-        </div>
+
+          <p class="chart-subheading chart-subheading-spaced">{{ 'results.monthlyByCalendarYear' | translate }}</p>
+          <div class="chart-bars-scroll">
+            <section class="chart-year-block" *ngFor="let block of monthlyEnergyByYear()">
+              <h4 class="chart-year-heading">{{ calendarYearHeading(block.calendar_year) }}</h4>
+              <div class="chart-bars">
+                <div class="chart-bar-row" *ngFor="let m of block.months">
+                  <span class="chart-bar-label">M{{ m.month }}</span>
+                  <div class="chart-bar-track">
+                    <div class="chart-bar-fill" [style.width.%]="(m.kwh / maxMonthlyEnergy()) * 100"></div>
+                  </div>
+                  <span class="chart-bar-value">{{ m.kwh | number: '1.0-0' }}</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </ng-container>
+
+        <ng-template #monthlySingleColumn>
+          <div class="chart-bars" *ngIf="monthlyEnergy().length > 0">
+            <div class="chart-bar-row" *ngFor="let m of monthlyEnergy()">
+              <span class="chart-bar-label">M{{ m.month }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill" [style.width.%]="(m.kwh / maxMonthlyEnergy()) * 100"></div>
+              </div>
+              <span class="chart-bar-value">{{ m.kwh | number: '1.0-0' }}</span>
+            </div>
+          </div>
+        </ng-template>
       </div>
 
       <div class="chart-card">
@@ -106,48 +215,33 @@
     <section class="results-sensitivity" *ngIf="res.sensitivity">
       <h3 class="section-title-row">{{ 'results.sensitivityTitle' | translate }}<app-info-tooltip explanationKey="results.explainSensitivity" /></h3>
       <p class="results-sensitivity-desc results-section-intro">{{ 'results.introSensitivity' | translate }}</p>
-      <div class="sensitivity-1d">
-        <h4>{{ 'results.sensitivity1D' | translate }}</h4>
-        <div class="sensitivity-1d-chart">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="sensitivity-svg">
-            <polyline
-              *ngIf="res.sensitivity.one_d.values.length"
-              [attr.points]="sensitivity1DPoints(res.sensitivity.one_d).payback"
-              class="sensitivity-line sensitivity-line-payback"
-            />
-            <polyline
-              *ngIf="res.sensitivity.one_d.values.length"
-              [attr.points]="sensitivity1DPoints(res.sensitivity.one_d).npv"
-              class="sensitivity-line sensitivity-line-npv"
-            />
-          </svg>
-          <div class="sensitivity-1d-labels">
-            <span>{{ 'results.payback' | translate }}</span>
-            <span>{{ 'results.npv' | translate }}</span>
-          </div>
-        </div>
-        <div class="sensitivity-1d-axes">
-          <span>{{ res.sensitivity.one_d.values[0] | number: '1.2-2' }}</span>
-          <span>{{ res.sensitivity.one_d.values[res.sensitivity.one_d.values.length - 1] | number: '1.2-2' }}</span>
-        </div>
-      </div>
       <div class="sensitivity-2d">
         <h4>{{ 'results.sensitivity2D' | translate }} ({{ 'results.npv' | translate }})</h4>
+        <div class="heatmap-axis-title">
+          <span class="heatmap-axis-y">{{ 'results.sensitivityAxisSelfConsumption' | translate }}</span>
+          <span class="heatmap-axis-x">{{ 'results.sensitivityAxisElectricityPrice' | translate }} ({{ priceUnit() }})</span>
+        </div>
         <div class="heatmap-wrap">
           <table class="heatmap">
             <thead>
               <tr>
-                <th></th>
-                <th *ngFor="let x of res.sensitivity.two_d.x_axis">{{ x | number: '1.2-2' }}</th>
+                <th class="heatmap-corner">{{ 'results.sensitivityHeatmapCorner' | translate }}</th>
+                <th *ngFor="let x of res.sensitivity.two_d.x_axis" class="heatmap-col">
+                  {{ x | number: '1.2-2' }}
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let yVal of res.sensitivity.two_d.y_axis; let j = index">
-                <th>{{ (yVal * 100) | number: '0.0-0' }}%</th>
+                <th class="heatmap-row">{{ (yVal * 100) | number: '0.0-0' }}%</th>
                 <td
                   *ngFor="let xVal of res.sensitivity.two_d.x_axis; let i = index"
                   [style.background]="heatmapColor(res.sensitivity.two_d.npv_grid[i][j], gridMinMax(res.sensitivity.two_d.npv_grid).min, gridMinMax(res.sensitivity.two_d.npv_grid).max)"
-                  [title]="res.sensitivity.two_d.npv_grid[i][j] != null ? (res.sensitivity.two_d.npv_grid[i][j] | number: '1.0-0') : 'n/a'"
+                  [title]="
+                    ('results.sensitivityTooltipPrice' | translate) + ': ' + formatPrice(xVal) + ' — ' +
+                    ('results.sensitivityAxisSelfConsumption' | translate) + ': ' + ((yVal * 100) | number: '0.0-0') + '%' + ' — ' +
+                    ('results.sensitivityAxisNpvMoney' | translate) + ': ' + (res.sensitivity.two_d.npv_grid[i][j] != null ? formatMoney(res.sensitivity.two_d.npv_grid[i][j]!) : ('results.na' | translate))
+                  "
                 >
                   {{ res.sensitivity.two_d.npv_grid[i][j] != null ? (res.sensitivity.two_d.npv_grid[i][j] | number: '1.0-0') : '—' }}
                 </td>
@@ -155,28 +249,61 @@
             </tbody>
           </table>
         </div>
+        <div class="heatmap-legend" *ngIf="gridMinMax(res.sensitivity.two_d.npv_grid) as mm">
+          <span class="heatmap-legend-label">{{ formatMoney(mm.min) }}</span>
+          <span class="heatmap-legend-bar" aria-hidden="true"></span>
+          <span class="heatmap-legend-label">{{ formatMoney(mm.max) }}</span>
+          <span class="heatmap-legend-na">{{ 'results.na' | translate }}: {{ '—' }}</span>
+        </div>
         <p class="heatmap-axes-desc">{{ 'results.sensitivity2DAxes' | translate }}</p>
       </div>
     </section>
 
     <section class="results-monte-carlo" *ngIf="res.monte_carlo">
       <h3 class="section-title-row">{{ 'results.monteCarloTitle' | translate }}<app-info-tooltip explanationKey="results.explainMonteCarlo" /></h3>
-      <p class="results-monte-carlo-desc results-section-intro">{{ 'results.introMonteCarlo' | translate }}</p>
+      <p class="results-monte-carlo-desc results-section-intro">{{ 'results.monteCarloIntroRisk' | translate }}</p>
+      <p class="results-mc-yield-basis">
+        <span class="chart-title-row">
+          <strong>{{ 'results.mcYieldBasisLabel' | translate }}</strong>
+          <app-info-tooltip explanationKey="results.explainMcYieldBasisTooltip" />
+        </span>
+        <span class="results-mc-yield-plain">{{ 'results.mcYieldBasisPlain' | translate }}</span>
+      </p>
       <div class="monte-carlo-stats">
         <div class="monte-carlo-card">
           <h4>{{ 'results.paybackPlain' | translate }} ({{ 'results.p10p50p90Plain' | translate }})</h4>
           <p class="monte-carlo-values">
-            {{ res.monte_carlo.payback.p10 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p50 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p90 | number: '1.1-1' }}
-            {{ 'results.years' | translate }}
+            <ng-container *ngIf="res.monte_carlo.valid_samples?.payback; else noPaybackMc">
+              {{ res.monte_carlo.payback.p10 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p50 | number: '1.1-1' }} / {{ res.monte_carlo.payback.p90 | number: '1.1-1' }}
+              {{ 'results.years' | translate }}
+            </ng-container>
+            <ng-template #noPaybackMc>n/a</ng-template>
+          </p>
+          <p class="monte-carlo-prob">
+            {{ 'results.noPaybackWithinAnalysis' | translate }}:
+            {{ (res.monte_carlo.prob_never_payback ?? 0) * 100 | number: '1.0-1' }}%
           </p>
           <p *ngIf="res.monte_carlo.payback.prob_under_target != null" class="monte-carlo-prob">
-            {{ 'results.probPaybackUnderTarget' | translate }}: {{ (res.monte_carlo.payback.prob_under_target * 100) | number: '1.0-1' }}%
+            <span class="chart-title-row">
+              {{ 'results.probPaybackUnderTargetPlain' | translate }}
+              <app-info-tooltip explanationKey="results.explainProbPaybackUnderTarget" />
+            </span>
+            : {{ (res.monte_carlo.payback.prob_under_target * 100) | number: '1.0-1' }}%
           </p>
         </div>
         <div class="monte-carlo-card">
           <h4>{{ 'results.npvPlain' | translate }} ({{ 'results.p10p50p90Plain' | translate }})</h4>
           <p class="monte-carlo-values">
-            {{ res.monte_carlo.npv.p10 | number: '1.0-0' }} / {{ res.monte_carlo.npv.p50 | number: '1.0-0' }} / {{ res.monte_carlo.npv.p90 | number: '1.0-0' }}
+            <ng-container *ngIf="res.monte_carlo.valid_samples?.npv; else noNpvMc">
+              {{ res.monte_carlo.npv.p10 != null ? formatMoney(res.monte_carlo.npv.p10) : 'n/a' }} /
+              {{ res.monte_carlo.npv.p50 != null ? formatMoney(res.monte_carlo.npv.p50) : 'n/a' }} /
+              {{ res.monte_carlo.npv.p90 != null ? formatMoney(res.monte_carlo.npv.p90) : 'n/a' }}
+            </ng-container>
+            <ng-template #noNpvMc>n/a</ng-template>
+          </p>
+          <p class="monte-carlo-prob">
+            {{ 'results.chanceNpvPositive' | translate }}:
+            {{ (res.monte_carlo.prob_npv_positive ?? 0) * 100 | number: '1.0-1' }}%
           </p>
         </div>
       </div>
@@ -184,24 +311,154 @@
       <div class="monte-carlo-histograms" *ngIf="res.monte_carlo.histogram_bins">
         <div class="histogram-wrap">
           <h4>{{ 'results.payback' | translate }} {{ 'results.distribution' | translate }}</h4>
-          <div class="histogram-bars">
-            <div
-              *ngFor="let c of res.monte_carlo.histogram_bins.payback.counts; let i = index"
-              class="histogram-bar"
-              [style.height.%]="(sumCounts(res.monte_carlo.histogram_bins!.payback.counts) ? (c / sumCounts(res.monte_carlo.histogram_bins!.payback.counts)) * 100 : 0)"
-              [title]="(res.monte_carlo.histogram_bins!.payback.edges[i] | number: '1.1-1') + ' - ' + (res.monte_carlo.histogram_bins!.payback.edges[i+1] | number: '1.1-1')"
-            ></div>
+          <p class="histogram-desc">{{ 'results.histogramDesc' | translate }}</p>
+          <div class="histogram-chart histogram-chart-mc">
+            <div class="histogram-y-gutter">
+              <div class="histogram-y-title">{{ 'results.axisYFrequency' | translate }}</div>
+              <div class="histogram-y-axis">
+                <span>100%</span>
+                <span>75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+              </div>
+            </div>
+            <div class="histogram-main">
+              <div class="histogram-scroll">
+                <div
+                  class="histogram-plot-inner"
+                  [style.min-width.px]="mcHistogramPlotMinWidth(res.monte_carlo.histogram_bins.payback.counts.length)"
+                >
+                  <div class="histogram-bars-track">
+                    <div class="histogram-grid" aria-hidden="true">
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                    </div>
+                    <div class="histogram-bars-row">
+                      <div
+                        *ngFor="let c of res.monte_carlo.histogram_bins.payback.counts; let i = index"
+                        class="histogram-bin"
+                      >
+                        <div class="histogram-bar-track">
+                          <div
+                            class="histogram-bar"
+                            [style.height.%]="
+                              sumCounts(res.monte_carlo.histogram_bins!.payback.counts)
+                                ? (c / sumCounts(res.monte_carlo.histogram_bins!.payback.counts)) * 100
+                                : 0
+                            "
+                            [title]="
+                              (res.monte_carlo.histogram_bins!.payback.edges[i] | number: '1.1-1') +
+                              ' - ' +
+                              (res.monte_carlo.histogram_bins!.payback.edges[i + 1] | number: '1.1-1') +
+                              ' ' +
+                              ('results.years' | translate) +
+                              ' • ' +
+                              (c | number: '1.0-0') +
+                              ' (' +
+                              (percent(c, sumCounts(res.monte_carlo.histogram_bins!.payback.counts)) | number: '1.0-1') +
+                              '%)' +
+                              (res.monte_carlo.histogram_bins!.payback.underflow ||
+                              res.monte_carlo.histogram_bins!.payback.overflow
+                                ? ' • ' + ('results.outliersClipped' | translate)
+                                : '')
+                            "
+                          ></div>
+                        </div>
+                        <div class="histogram-bin-label">
+                          {{ paybackBinLabel(res.monte_carlo.histogram_bins.payback.edges, i) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="histogram-x-axis-title">{{ 'results.axisXPaybackBins' | translate }}</div>
+            </div>
+          </div>
+          <div class="histogram-legend">
+            <span class="legend-item"><span class="legend-swatch legend-swatch-bars"></span>{{ 'results.legendFrequency' | translate }}</span>
+            <span *ngIf="res.monte_carlo.histogram_bins.payback.underflow || res.monte_carlo.histogram_bins.payback.overflow" class="legend-note">
+              {{ 'results.outliersClipped' | translate }} ({{ res.monte_carlo.histogram_bins.payback.underflow }}↓ / {{ res.monte_carlo.histogram_bins.payback.overflow }}↑)
+            </span>
           </div>
         </div>
         <div class="histogram-wrap">
           <h4>{{ 'results.npv' | translate }} {{ 'results.distribution' | translate }}</h4>
-          <div class="histogram-bars">
-            <div
-              *ngFor="let c of res.monte_carlo.histogram_bins.npv.counts; let i = index"
-              class="histogram-bar"
-              [style.height.%]="(sumCounts(res.monte_carlo.histogram_bins!.npv.counts) ? (c / sumCounts(res.monte_carlo.histogram_bins!.npv.counts)) * 100 : 0)"
-              [title]="(res.monte_carlo.histogram_bins!.npv.edges[i] | number: '1.0-0') + ' - ' + (res.monte_carlo.histogram_bins!.npv.edges[i+1] | number: '1.0-0')"
-            ></div>
+          <p class="histogram-desc">{{ 'results.histogramDesc' | translate }}</p>
+          <div class="histogram-chart histogram-chart-mc">
+            <div class="histogram-y-gutter">
+              <div class="histogram-y-title">{{ 'results.axisYFrequency' | translate }}</div>
+              <div class="histogram-y-axis">
+                <span>100%</span>
+                <span>75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+              </div>
+            </div>
+            <div class="histogram-main">
+              <div class="histogram-scroll">
+                <div
+                  class="histogram-plot-inner"
+                  [style.min-width.px]="mcHistogramPlotMinWidth(res.monte_carlo.histogram_bins.npv.counts.length)"
+                >
+                  <div class="histogram-bars-track">
+                    <div class="histogram-grid" aria-hidden="true">
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                      <div class="histogram-grid-line"></div>
+                    </div>
+                    <div
+                      *ngIf="npvZeroMarkerPct(res.monte_carlo.histogram_bins.npv.edges) != null"
+                      class="histogram-zero-line"
+                      [style.left.%]="npvZeroMarkerPct(res.monte_carlo.histogram_bins.npv.edges)!"
+                      [attr.title]="'results.legendNpvZero' | translate"
+                    ></div>
+                    <div class="histogram-bars-row">
+                      <div
+                        *ngFor="let c of res.monte_carlo.histogram_bins.npv.counts; let i = index"
+                        class="histogram-bin"
+                      >
+                        <div class="histogram-bar-track">
+                          <div
+                            class="histogram-bar"
+                            [style.height.%]="
+                              sumCounts(res.monte_carlo.histogram_bins!.npv.counts)
+                                ? (c / sumCounts(res.monte_carlo.histogram_bins!.npv.counts)) * 100
+                                : 0
+                            "
+                            [title]="
+                              monteCarloNpvHistogramBarTitle(
+                                res.monte_carlo.histogram_bins!.npv.edges,
+                                i,
+                                c,
+                                sumCounts(res.monte_carlo.histogram_bins!.npv.counts),
+                                !!(res.monte_carlo.histogram_bins!.npv.underflow || res.monte_carlo.histogram_bins!.npv.overflow)
+                              )
+                            "
+                          ></div>
+                        </div>
+                        <div class="histogram-bin-label">
+                          {{ npvBinLabel(res.monte_carlo.histogram_bins.npv.edges, i) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="histogram-x-axis-title">{{ 'results.axisXNpvBins' | translate }} ({{ currencySymbol() }})</div>
+            </div>
+          </div>
+          <div class="histogram-legend">
+            <span class="legend-item"><span class="legend-swatch legend-swatch-bars"></span>{{ 'results.legendFrequency' | translate }}</span>
+            <span class="legend-item"><span class="legend-swatch legend-swatch-zero"></span>{{ 'results.legendNpvZero' | translate }}</span>
+            <span *ngIf="res.monte_carlo.histogram_bins.npv.underflow || res.monte_carlo.histogram_bins.npv.overflow" class="legend-note">
+              {{ 'results.outliersClipped' | translate }} ({{ res.monte_carlo.histogram_bins.npv.underflow }}↓ / {{ res.monte_carlo.histogram_bins.npv.overflow }}↑)
+            </span>
           </div>
         </div>
       </div>
@@ -214,17 +471,43 @@
         <div class="break-even-card">
           <h4>{{ 'results.breakEvenCapexPlain' | translate }}</h4>
           <p class="break-even-value">
-            {{ res.break_even.break_even_capex != null ? (res.break_even.break_even_capex | number: '1.0-0') : 'n/a' }}
+            {{
+              res.break_even.break_even_capex_simple_payback.value != null
+                ? formatMoney(res.break_even.break_even_capex_simple_payback.value)
+                : 'n/a'
+            }}
           </p>
-          <p class="break-even-meta">{{ 'results.breakEvenCapexMeta' | translate }} {{ res.break_even.target_payback_years }} {{ 'results.years' | translate }}</p>
+          <p class="break-even-meta">
+            {{ 'results.breakEvenCapexMeta' | translate }} {{ res.break_even.target_payback_years_simple }} {{ 'results.years' | translate }}
+          </p>
+          <p class="break-even-reason" *ngIf="res.break_even.break_even_capex_simple_payback.reason">
+            {{ res.break_even.break_even_capex_simple_payback.reason }}
+          </p>
         </div>
         <div class="break-even-card">
           <h4>{{ 'results.breakEvenPricePlain' | translate }}</h4>
           <p class="break-even-value">
-            {{ res.break_even.break_even_price_buy != null ? (res.break_even.break_even_price_buy | number: '1.3-3') : 'n/a' }}
+            {{
+              res.break_even.break_even_price_buy_npv_zero.value != null
+                ? formatPrice(res.break_even.break_even_price_buy_npv_zero.value)
+                : 'n/a'
+            }}
           </p>
           <p class="break-even-meta">{{ 'results.breakEvenPriceMeta' | translate }}</p>
+          <p class="break-even-reason" *ngIf="res.break_even.break_even_price_buy_npv_zero.reason">
+            {{ res.break_even.break_even_price_buy_npv_zero.reason }}
+          </p>
         </div>
+      </div>
+    </section>
+
+    <section class="results-consumption" *ngIf="res.consumption_analysis">
+      <h3 class="section-title-row">{{ 'results.consumptionTitle' | translate }}</h3>
+      <p class="results-section-intro">{{ 'results.introConsumptionAnalysis' | translate }}</p>
+      <div class="consumption-summary">
+        <p>{{ 'results.selfConsumedKwh' | translate }}: {{ res.consumption_analysis.annual_self_consumed_kwh | number: '1.0-0' }}</p>
+        <p>{{ 'results.exportedKwh' | translate }}: {{ res.consumption_analysis.annual_exported_kwh | number: '1.0-0' }}</p>
+        <p>{{ 'results.selfConsumptionRatioResult' | translate }}: {{ (res.consumption_analysis.self_consumption_ratio * 100) | number: '1.0-1' }}%</p>
       </div>
     </section>
 
@@ -247,7 +530,7 @@
           <div
             *ngFor="let p of res.kwp_optimization.curve"
             class="curve-bar-row"
-            [title]="'kWp: ' + (p.kwp | number: '1.1-1') + ', NPV: ' + (p.npv | number: '1.0-0')"
+            [title]="'kWp: ' + (p.kwp | number: '1.1-1') + ', NPV: ' + formatMoney(p.npv)"
           >
             <span class="curve-bar-label">{{ p.kwp | number: '1.1-1' }}</span>
             <div class="curve-bar-track">
@@ -256,7 +539,7 @@
                 [style.width.%]="(maxCurveNpv() - minCurveNpv() ? (p.npv - minCurveNpv()) / (maxCurveNpv() - minCurveNpv()) * 100 : 0)"
               ></div>
             </div>
-            <span class="curve-bar-value">{{ p.npv | number: '1.0-0' }}</span>
+            <span class="curve-bar-value">{{ formatMoney(p.npv) }}</span>
           </div>
         </div>
       </div>
@@ -283,9 +566,9 @@
                 [class.base-scenario]="row.self_consumption === store.lastRequest()?.economics?.self_consumption"
               >
                 <td>{{ (row.self_consumption * 100) | number: '1.0-0' }}%</td>
-                <td>{{ row.payback_years != null ? (row.payback_years + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
-                <td>{{ row.npv != null ? (row.npv | number: '1.0-0') : 'n/a' }}</td>
-                <td>{{ row.savings_year1 | number: '1.0-0' }}</td>
+                <td>{{ row.payback_years != null ? ((row.payback_years | number: '1.1-1') + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
+                <td>{{ row.npv != null ? formatMoney(row.npv) : 'n/a' }}</td>
+                <td>{{ formatMoney(row.savings_year1) }}</td>
               </tr>
             </tbody>
           </table>
@@ -306,10 +589,10 @@
                 *ngFor="let row of res.scenarios.by_price_buy"
                 [class.base-scenario]="row.price_buy === store.lastRequest()?.economics?.price_buy"
               >
-                <td>{{ row.price_buy | number: '1.2-2' }}</td>
-                <td>{{ row.payback_years != null ? (row.payback_years + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
-                <td>{{ row.npv != null ? (row.npv | number: '1.0-0') : 'n/a' }}</td>
-                <td>{{ row.savings_year1 | number: '1.0-0' }}</td>
+                <td>{{ formatPrice(row.price_buy) }}</td>
+                <td>{{ row.payback_years != null ? ((row.payback_years | number: '1.1-1') + ' ' + ('results.years' | translate)) : 'n/a' }}</td>
+                <td>{{ row.npv != null ? formatMoney(row.npv) : 'n/a' }}</td>
+                <td>{{ formatMoney(row.savings_year1) }}</td>
               </tr>
             </tbody>
           </table>
@@ -338,6 +621,11 @@
   </ng-container>
 
   <ng-template #emptyState>
+    <header class="results-header">
+      <h2>{{ 'results.title' | translate }}</h2>
+      <p>{{ 'results.subtitle' | translate }}</p>
+      <p class="results-intro-overall">{{ 'results.introOverall' | translate }}</p>
+    </header>
     <section class="results-empty">
       <p>{{ 'results.empty' | translate }}</p>
       <button type="button" class="results-button" (click)="backToWizard()">

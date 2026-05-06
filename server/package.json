@@ -6,6 +6,12 @@
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
     "build": "tsc -p tsconfig.json",
+    "test:schema": "node dist/schema_selftest.js",
+    "test:mc": "node dist/monte_carlo_selftest.js",
+    "test:feasibility": "node dist/feasibility_score_selftest.js",
+    "test:monthly_chart": "node dist/monthly_chart_selftest.js",
+    "test": "npm run build && npm run test:schema && npm run test:mc && npm run test:feasibility && npm run test:monthly_chart",
+    "docs:typedoc": "typedoc --options typedoc.json",
     "prestart": "npm run build",
     "start": "node dist/index.js"
   },
@@ -23,6 +29,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "typedoc": "^0.28.7",
     "md-to-pdf": "^5.2.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

@@ -1,0 +1,74 @@
+.feasibility-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 6.5rem;
+  max-width: 7.5rem;
+}
+
+.feasibility-gauge-inner {
+  position: relative;
+  width: 5.5rem;
+  height: 4.5rem;
+}
+
+.feasibility-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.feasibility-track {
+  stroke: rgba(55, 65, 81, 0.95);
+}
+
+.feasibility-center {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.feasibility-score-num {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #f8fafc;
+}
+
+.feasibility-score-max {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #9ca3af;
+  margin-left: 0.05rem;
+}
+
+.feasibility-caption-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+.feasibility-title {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.feasibility-disclaimer {
+  margin: 0;
+  font-size: 0.6rem;
+  line-height: 1.25;
+  color: #6b7280;
+  text-align: center;
+  max-width: 7rem;
+}

@@ -18,7 +18,7 @@ export const SimulateSchema = z.object({
     peakpower_kw: z
       .number()
       .positive({ message: 'System size must be greater than 0' })
-      .max(1000, { message: 'System size must be at most 1000 kWp' }),
+      .max(5000, { message: 'System size must be at most 5000 kWp' }),
     loss_percent: z
       .number()
       .min(0, { message: 'System losses must be at least 0%' })
@@ -50,7 +50,7 @@ export const SimulateSchema = z.object({
     mountingplace: z.enum(['free', 'building']).default('free'),
     raddatabase: z.string().nullable().optional(),
     /**
-     * Fetch per-calendar-year PVGIS monthly production (one PVcalc per year) for the chart.
+     * Fetch hourly PVGIS production and aggregate by month (one seriescalc per year) for the chart.
      * 0 = off (single DB-average monthly profile). Max 20.
      */
     monthly_history_years: z.number().int().min(0).max(20).default(10)

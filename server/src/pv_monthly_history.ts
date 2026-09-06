@@ -49,16 +49,50 @@ export function selectCalendarYearsForHistory(
   return years;
 }
 
-/**
- * One PVcalc call per calendar year (startyear=endyear=Y). Applies near-shading factor to kWh.
+/** Sum hourly PVGIS power (W, one-hour steps) into monthly energy (kWh).
+ * Reject incomplete/invalid years instead of presenting partial totals as history.
  */
+export function aggregateHourlyMonths(
+  data: unknown,
+  year: number,
+  nearShadingFactor: number
+): MonthlyEnergyYearBlock['months'] {
+  const hourly = (data as any)?.outputs?.hourly;
+  const start = Date.UTC(year, 0, 1);
+  const end = Date.UTC(year + 1, 0, 1);
+  const expectedHours = (end - start) / 3600000;
+  if (!Array.isArray(hourly) || hourly.length !== expectedHours) {
+    throw new Error('Incomplete PVGIS hourly year');
+  }
+  const seen = new Set<number>();
+  const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, kwh: 0 }));
+  for (const row of hourly) {
+    const match = typeof row?.time === 'string' && /^(\d{4})(\d{2})(\d{2}):(\d{2})(\d{2})$/.exec(row.time);
+    if (!match || typeof row.P !== 'number' || !Number.isFinite(row.P) || row.P < 0) {
+      throw new Error('Invalid PVGIS hourly record');
+    }
+    const [, y, m, d, h, minute] = match.map(Number);
+    const timestamp = Date.UTC(y, m - 1, d, h);
+    const date = new Date(timestamp);
+    if (y !== year || m < 1 || m > 12 || d < 1 || date.getUTCDate() !== d ||
+        h > 23 || minute > 59 || timestamp < start || timestamp >= end || seen.has(timestamp)) {
+      throw new Error('Invalid or duplicate PVGIS hourly timestamp');
+    }
+    seen.add(timestamp);
+    months[m - 1].kwh += row.P / 1000;
+  }
+  return months.map((m) => ({ ...m, kwh: m.kwh * nearShadingFactor }));
+}
+
+/** One seriescalc call per calendar year; PVcalc only provides multi-year averages. */
 export async function fetchMonthlyEnergyByCalendarYear(
   baseParams: Record<string, any>,
   radiationDatabase: string | undefined,
   representativePvcalc: unknown,
   historyYearsRequested: number,
   nearShadingFactor: number,
-  warnings: ModelWarning[]
+  warnings: ModelWarning[],
+  fetchPVGIS: typeof callPVGIS = callPVGIS
 ): Promise<MonthlyEnergyYearBlock[]> {
   const bounds = meteoYearBounds(representativePvcalc);
   if (!bounds) return [];
@@ -68,26 +102,40 @@ export async function fetchMonthlyEnergyByCalendarYear(
     return [];
   }
 
+  const seriesParams = { ...baseParams, pvcalculation: 1, components: 0, trackingtype: 0 };
+  // Keep the same installation across all weather years, including when PVcalc
+  // selected the optimal orientation from the full meteorological period.
+  if (baseParams.optimalangles) {
+    const fixed = (representativePvcalc as any)?.inputs?.mounting_system?.fixed;
+    const angle = fixed?.slope?.value;
+    const aspect = fixed?.azimuth?.value;
+    if (typeof angle !== 'number' || !Number.isFinite(angle) ||
+        typeof aspect !== 'number' || !Number.isFinite(aspect)) {
+      warnings.push({
+        code: 'pvgis.monthly_history_orientation_unavailable',
+        severity: 'warning',
+        message: 'PVGIS monthly history requires the resolved installation orientation.'
+      });
+      return [];
+    }
+    Object.assign(seriesParams, { angle, aspect, optimalangles: 0 });
+  }
+
   const results = await Promise.all(
     years.map(async (calendar_year) => {
       try {
-        const data = await callPVGIS(
-          'PVcalc',
-          { ...baseParams, startyear: calendar_year, endyear: calendar_year },
-          radiationDatabase
+        const data = await fetchPVGIS(
+          'seriescalc',
+          { ...seriesParams, startyear: calendar_year, endyear: calendar_year },
+          radiationDatabase ?? (representativePvcalc as any)?.inputs?.meteo_data?.radiation_db
         );
-        const rows = parseMonthlyRows(data);
-        if (rows.length === 0) return null;
-        const months = rows.map((r) => ({
-          month: r.month,
-          kwh: r.E_m * nearShadingFactor
-        }));
+        const months = aggregateHourlyMonths(data, calendar_year, nearShadingFactor);
         return { calendar_year, months };
       } catch {
         warnings.push({
           code: 'pvgis.monthly_history_year_failed',
           severity: 'warning',
-          message: `PVGIS monthly history call failed for calendar year ${calendar_year}.`
+          message: `PVGIS hourly history failed or returned incomplete/invalid data for calendar year ${calendar_year}.`
         });
         return null;
       }

@@ -1,16 +1,8 @@
-const path = require('path');
-const { mdToPdf } = require('md-to-pdf');
-
-const root = path.join(__dirname, '..', '..');
-const src = path.join(root, 'docs', 'APP_DOCUMENTATION.md');
-const dest = path.join(root, 'docs', 'APP_DOCUMENTATION.pdf');
-
-mdToPdf(
-  { path: src },
-  { dest }
-)
-  .then(() => console.log('PDF written to', dest))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+// Compatibility entry point for the consolidated documentation renderer.
+// Set PYTHON to a Python executable with reportlab installed when necessary.
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+const script = path.resolve(__dirname, '../../docs/scripts/build-documentation.py');
+const result = spawnSync(process.env.PYTHON || 'python', [script], { stdio: 'inherit' });
+if (result.error) console.error(result.error.message);
+process.exitCode = result.status ?? 1;

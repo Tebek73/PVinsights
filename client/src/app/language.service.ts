@@ -11,7 +11,7 @@ export type Lang = 'en' | 'ro';
  */
 const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   // App shell
-  'app.title': { en: 'Solar PV Feasibility', ro: 'Fezabilitate PV solar' },
+  'app.title': { en: 'PVInsights', ro: 'PVInsights' },
   'app.subtitle': {
     en: 'Estimate solar production, savings, and payback for your location.',
     ro: 'Estimează producția solară, economiile și recuperarea investiției pentru locația ta.'
@@ -22,7 +22,10 @@ const TRANSLATIONS: Record<string, { en: string; ro: string }> = {
   'lang.ro': { en: 'RO', ro: 'RO' },
 
   // Wizard
-  'wizard.title': { en: 'Solar PV feasibility wizard', ro: 'Asistent fezabilitate PV solar' },
+  'wizard.title': {
+    en: 'Photovoltaic feasibility assessment',
+    ro: 'Evaluarea fezabilității fotovoltaice'
+  },
   'wizard.subtitle': {
     en: 'Follow the three steps to estimate solar electricity and savings using PVGIS.',
     ro: 'Urmează cei trei pași pentru a estima energia solară și economiile cu PVGIS.'

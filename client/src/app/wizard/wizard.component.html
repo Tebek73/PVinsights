@@ -28,7 +28,7 @@
       <div class="wizard-grid">
         <label>
           {{ 'wizard.systemSize' | translate }}
-          <input type="number" min="0" step="0.1" [ngModel]="peakpower_kw()" (ngModelChange)="peakpower_kw.set($event)" />
+          <input type="number" min="0" max="5000" step="0.1" [ngModel]="peakpower_kw()" (ngModelChange)="peakpower_kw.set($event)" />
           <span class="wizard-hint">{{ 'wizard.hintSystemSize' | translate }}</span>
         </label>
 
